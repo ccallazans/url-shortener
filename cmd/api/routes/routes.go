@@ -1,18 +1,17 @@
 package routes
 
 import (
-	"net/http"
+	"url-shortener/cmd/api/handlers"
 
-	"github.com/ccallazans/url-shortener/cmd/api/handlers"
-	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/v5"
 )
 
-func NewRouter() *chi.Mux {
+func ServeRouter() *chi.Mux {
 	router := chi.NewRouter()
 
 	// Public Routes
 	router.Group(func(r chi.Router) {
-		r.MethodFunc(http.MethodGet, "/status", handlers.GetStatus)
+		r.Get("/", handlers.Teste)
 	})
 
 	return router

@@ -1,12 +1,15 @@
+# Use postgres/example user/password credentials
 version: '3.1'
+
 services:
+
   db:
     image: postgres
     restart: always
     environment:
-     POSTGRES_USER: username
-     POSTGRES_PASSWORD: password
-     POSTGRES_DB: database
+      - POSTGRES_USER=username
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=url-shortener
     ports:
       - '5432:5432'
 
