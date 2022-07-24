@@ -32,7 +32,6 @@ func main() {
 
 	fmt.Println("Starting Server")
 	err = http.ListenAndServe(":5000", r)
-	fmt.Println(err)
 }
 
 func ConnectDB() (*sqlx.DB, error) {

@@ -2,27 +2,26 @@ package models
 
 import "time"
 
-type UrlShort struct {
-	ID          int       `json:"-" db:"id"`
-	Hash        string    `json:"hash" db:"hash"`
-	OriginalUrl string    `json:"original_url" db:"original_url"`
-	CreatedAt   time.Time `json:"created_at" db:"created_at"`
+type Url struct {
+	ID        int       `json:"-" db:"id"`
+	Hash      string    `json:"hash" db:"hash"`
+	Url       string    `json:"url" db:"url"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-type UrlShortRequest struct {
-	Hash        string    `json:"hash" db:"hash"`
-	OriginalUrl string    `json:"original_url" db:"original_url"`
-	CreatedAt   time.Time `json:"-" db:"created_at"`
+type UrlRequest struct {
+	Hash      string    `json:"hash" db:"hash"`
+	Url       string    `json:"url" db:"url"`
+	CreatedAt time.Time `json:"-" db:"created_at"`
 }
-
 
 type UrlShortRepository interface {
-	AddUrl(newUrl UrlShortRequest) error
+	InsertUrlModel(newUrl UrlRequest) error
 
-	GetAllUrls() ([]*UrlShort, error)
-	GetUrl(hash string) (*string, error)
+	GetAllUrls() ([]*Url, error)
+	GetByHash(hash string) (*Url, error)
 
-	UpdateHash(newUrl UrlShortRequest) error
+	UpdateByHash(newUrl UrlRequest) error
 
-	VerifyExists(column string, value string) error
+	HashExists(url string) bool
 }

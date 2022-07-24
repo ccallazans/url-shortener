@@ -1,8 +1,6 @@
 package repositories
 
 import (
-	"database/sql"
-	"fmt"
 	"url-shortener/models"
 
 	"github.com/jmoiron/sqlx"
@@ -18,11 +16,11 @@ func NewUrlRepo(db *sqlx.DB) *UrlRepo {
 	}
 }
 
-func (r *UrlRepo) AddUrl(newUrl models.UrlShortRequest) error {
+func (r *UrlRepo) InsertUrlModel(newUrl models.UrlRequest) error {
 
 	// Insert new url
-	query := `INSERT INTO urls (original_url, hash, created_at) VALUES ($1, $2, $3)`
-	_, err := r.db.Exec(query, newUrl.OriginalUrl, newUrl.Hash, newUrl.CreatedAt)
+	query := `INSERT INTO urls (url, hash, created_at) VALUES ($1, $2, $3)`
+	_, err := r.db.Exec(query, newUrl.Url, newUrl.Hash, newUrl.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -30,61 +28,61 @@ func (r *UrlRepo) AddUrl(newUrl models.UrlShortRequest) error {
 	return nil
 }
 
-func (r *UrlRepo) GetAllUrls() ([]*models.UrlShort, error) {
+func (r *UrlRepo) GetAllUrls() ([]*models.Url, error) {
 
 	// query all data
-	query := `SELECT original_url, hash, created_at FROM urls`
+	query := `SELECT id, hash, url, created_at FROM urls`
 	rows, err := r.db.Query(query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var urls []*models.UrlShort
+	var allUrl []*models.Url
 
 	// Read all rows and save into 'urls'
 	for rows.Next() {
-		var addUrl models.UrlShort
+		var newUrl models.Url
 		err = rows.Scan(
-			&addUrl.OriginalUrl,
-			&addUrl.Hash,
-			&addUrl.CreatedAt,
+			&newUrl.ID,
+			&newUrl.Hash,
+			&newUrl.Url,
+			&newUrl.CreatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
 
 		// Append data
-		urls = append(urls, &addUrl)
+		allUrl = append(allUrl, &newUrl)
 	}
 
-	return urls, nil
+	return allUrl, nil
 }
 
-func (r *UrlRepo) GetUrl(hash string) (*string, error) {
-
+func (r *UrlRepo) GetByHash(hash string) (*models.Url, error) {
 	// Query specific data
-	query := `SELECT original_url FROM urls WHERE hash = $1`
-	row, err := r.db.Query(query, hash)
+	query := `SELECT id, hash, url, created_at FROM urls WHERE hash = $1`
+	row := r.db.QueryRow(query, hash)
+
+	var newUrl models.Url
+	err := row.Scan(
+		&newUrl.ID,
+		&newUrl.Hash,
+		&newUrl.Url,
+		&newUrl.CreatedAt,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	var url string
-
-	// Append data
-	err = row.Scan(&url)
-	if err == sql.ErrNoRows {
-		return nil, err
-	}
-
-	return &url, nil
+	return &newUrl, nil
 }
 
-func (r *UrlRepo) UpdateHash(newUrl models.UrlShortRequest) error {
+func (r *UrlRepo) UpdateByHash(newUrl models.UrlRequest) error {
 	// Query specific data
-	query := `UPDATE urls SET hash = $1 WHERE original_url = $2`
-	_, err := r.db.Exec(query, newUrl.Hash, newUrl.OriginalUrl)
+	query := `UPDATE urls SET url = $1 WHERE hash = $2`
+	_, err := r.db.Exec(query, newUrl.Url, newUrl.Hash)
 	if err != nil {
 		return err
 	}
@@ -92,19 +90,21 @@ func (r *UrlRepo) UpdateHash(newUrl models.UrlShortRequest) error {
 	return nil
 }
 
-func (r *UrlRepo) VerifyExists(column string, value string) error {
+func (r *UrlRepo) HashExists(url string) bool {
+	// Query specific data
+	query := `SELECT id, hash, url, created_at FROM urls WHERE hash = $1`
+	row := r.db.QueryRow(query, url)
 
-	// Query data
-	query := fmt.Sprintf(`SELECT * FROM urls WHERE %s = $1`, column)
-	rows, err := r.db.Query(query, value)
+	var newUrl models.Url
+	err := row.Scan(
+		&newUrl.ID,
+		&newUrl.Hash,
+		&newUrl.Url,
+		&newUrl.CreatedAt,
+	)
 	if err != nil {
-		return err
+		return false
 	}
 
-	// If exists
-	if rows.Next() {
-		return fmt.Errorf("%s already exists", column)
-	}
-
-	return nil
+	return true
 }

@@ -11,15 +11,14 @@ func ServeRouter(hand *handlers.BaseHandler) *chi.Mux {
 
 	// Public Routes
 	router.Group(func(r chi.Router) {
-		r.NotFound(hand.NotFoundHandler)
-		r.Get("/", hand.GetAllUrlsHandler)
-		r.Get("/{hash}", hand.GetUrlHandler)
+		r.Get("/", hand.GetAllHandler)
+		r.Get("/{hash}", hand.GetByHashHandler)
 	})
 
 	// Protected Routes
 	router.Group(func(r chi.Router) {
 		r.Post("/create", hand.InsertUrlHandler)
-		r.Post("/edit", hand.UpdateHashHandler)
+		r.Post("/editurl", hand.UpdateByHashHandler)
 	})
 
 

@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"math/rand"
 	"net/http"
+	"net/url"
 )
 
 func writeJSON(w http.ResponseWriter, status int, wrap string, data interface{}) error {
@@ -38,11 +39,16 @@ func errorJSON(w http.ResponseWriter, statusCode int, err error) {
 
 func generateHash() string {
 	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-	
+
 	hash := make([]byte, 5)
 	for i := range hash {
 		hash[i] = letterBytes[rand.Intn(len(letterBytes))]
 	}
 
 	return string(hash)
+}
+
+func IsUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
