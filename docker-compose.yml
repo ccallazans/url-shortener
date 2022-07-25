@@ -12,7 +12,8 @@ services:
     ports:
       - '5432:5432'
     volumes: 
-      - /db-files:/var/lib/postgresql/data
+      - ./postgres-data:/var/lib/postgresql/data
+      - ./sql/create_tables.sql:/docker-entrypoint-initdb.d/create_tables.sql
 
   adminer:
     image: adminer

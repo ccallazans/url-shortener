@@ -17,17 +17,17 @@ func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 	var newUrl models.UrlRequest
 	err := json.NewDecoder(r.Body).Decode(&newUrl)
 	if err != nil {
-		errorJSON(w, http.StatusBadRequest, err)
+		ErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
 
 	if newUrl.Url == "" {
-		errorJSON(w, http.StatusBadRequest, errors.New(`missing "url"`))
+		ErrorJSON(w, http.StatusBadRequest, errors.New(`missing "url"`))
 		return
 	}
 
 	if !isUrl(newUrl.Url) {
-		errorJSON(w, http.StatusBadRequest, errors.New(`invalid url`))
+		ErrorJSON(w, http.StatusBadRequest, errors.New(`invalid url`))
 		return
 	}
 
@@ -37,14 +37,14 @@ func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 
 	// if hash exists
 	if h.urlRepo.HashExists(newUrl.Hash) {
-		errorJSON(w, http.StatusBadRequest, errors.New(`error generating hash`))
+		ErrorJSON(w, http.StatusConflict, errors.New(`error generating hash`))
 		return
 	}
 
 	// Add into database
 	err = h.urlRepo.InsertUrl(newUrl)
 	if err != nil {
-		errorJSON(w, http.StatusInternalServerError, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -55,9 +55,9 @@ func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send response
-	err = writeJSON(w, http.StatusOK, "response", sendUrl)
+	err = WriteJSON(w, http.StatusOK, "response", sendUrl)
 	if err != nil {
-		errorJSON(w, http.StatusInternalServerError, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -68,14 +68,14 @@ func (h *BaseHandler) GetByHashHandler(w http.ResponseWriter, r *http.Request) {
 
 	// if dont exist
 	if !h.urlRepo.HashExists(hash) {
-		errorJSON(w, http.StatusBadRequest, errors.New(`hash do not exist`))
+		ErrorJSON(w, http.StatusNotFound, errors.New(`hash do not exist`))
 		return
 	}
 
 	// Query data
 	newUrl, err := h.urlRepo.GetByHash(hash)
 	if err != nil {
-		errorJSON(w, http.StatusBadRequest, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -87,13 +87,13 @@ func (h *BaseHandler) GetAllHandler(w http.ResponseWriter, r *http.Request) {
 	// Query all rows
 	allUrls, err := h.urlRepo.GetAllUrls()
 	if err != nil {
-		errorJSON(w, http.StatusInternalServerError, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = writeJSON(w, http.StatusOK, "response", allUrls)
+	err = WriteJSON(w, http.StatusOK, "response", allUrls)
 	if err != nil {
-		errorJSON(w, http.StatusBadRequest, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 }
@@ -103,38 +103,43 @@ func (h *BaseHandler) UpdateByHashHandler(w http.ResponseWriter, r *http.Request
 	var newUrl models.UrlRequest
 	err := json.NewDecoder(r.Body).Decode(&newUrl)
 	if err != nil {
-		errorJSON(w, http.StatusBadRequest, err)
+		ErrorJSON(w, http.StatusBadRequest, err)
 		return
 	}
 
 	// Verify if hash is empty
 	if newUrl.Hash == "" {
-		errorJSON(w, http.StatusBadRequest, errors.New("missing \"hash\""))
+		ErrorJSON(w, http.StatusBadRequest, errors.New("missing \"hash\""))
 		return
 	}
 
 	// Verify if url is empty
 	if newUrl.Url == "" {
-		errorJSON(w, http.StatusBadRequest, errors.New("missing \"url\""))
+		ErrorJSON(w, http.StatusBadRequest, errors.New("missing \"url\""))
 		return
 	}
 
 	// if dont exist
 	if !h.urlRepo.HashExists(newUrl.Hash) {
-		errorJSON(w, http.StatusBadRequest, errors.New("hash do not exist"))
+		ErrorJSON(w, http.StatusNotFound, errors.New("hash do not exist"))
+		return
+	}
+
+	if !isUrl(newUrl.Url){
+		ErrorJSON(w, http.StatusNotFound, errors.New(`url not valid. ex:"https://google.com"`))
 		return
 	}
 
 	// Update hash
 	err = h.urlRepo.UpdateByHash(newUrl)
 	if err != nil {
-		errorJSON(w, http.StatusInternalServerError, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 
-	err = writeJSON(w, http.StatusOK, "response", newUrl)
+	err = WriteJSON(w, http.StatusOK, "response", newUrl)
 	if err != nil {
-		errorJSON(w, http.StatusInternalServerError, err)
+		ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
 }

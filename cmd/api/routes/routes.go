@@ -2,13 +2,14 @@ package routes
 
 import (
 	"url-shortener/cmd/api/handlers"
+	mid "url-shortener/cmd/api/middleware"
 
 	"github.com/go-chi/chi/v5"
 )
 
 func ServeRouter(hand *handlers.BaseHandler) *chi.Mux {
 	router := chi.NewRouter()
-	
+
 	// Public Routes
 	router.Group(func(r chi.Router) {
 		r.Get("/", hand.GetAllHandler)
@@ -19,11 +20,10 @@ func ServeRouter(hand *handlers.BaseHandler) *chi.Mux {
 
 	// Protected Routes
 	router.Group(func(r chi.Router) {
-		// r.Use()
+		r.Use(mid.IsAuthorized)
 		r.Post("/create", hand.InsertUrlHandler)
 		r.Post("/edit", hand.UpdateByHashHandler)
 	})
-
 
 	return router
 }

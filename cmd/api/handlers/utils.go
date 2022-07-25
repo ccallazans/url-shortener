@@ -11,7 +11,7 @@ import (
 )
 
 // Parse JSON
-func writeJSON(w http.ResponseWriter, status int, wrap string, data interface{}) error {
+func WriteJSON(w http.ResponseWriter, status int, wrap string, data interface{}) error {
 	wrapper := make(map[string]interface{})
 
 	wrapper[wrap] = data
@@ -28,7 +28,7 @@ func writeJSON(w http.ResponseWriter, status int, wrap string, data interface{})
 	return nil
 }
 
-func errorJSON(w http.ResponseWriter, statusCode int, err error) {
+func ErrorJSON(w http.ResponseWriter, statusCode int, err error) {
 
 	type jsonError struct {
 		Message string `json:"message"`
@@ -38,7 +38,7 @@ func errorJSON(w http.ResponseWriter, statusCode int, err error) {
 		Message: err.Error(),
 	}
 
-	writeJSON(w, statusCode, "error", theError)
+	WriteJSON(w, statusCode, "error", theError)
 }
 
 // Verify user credentials
