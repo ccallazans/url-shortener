@@ -16,7 +16,7 @@ type UrlRequest struct {
 }
 
 type UrlShortRepository interface {
-	InsertUrlModel(newUrl UrlRequest) error
+	InsertUrl(newUrl UrlRequest) error
 
 	GetAllUrls() ([]*Url, error)
 	GetByHash(hash string) (*Url, error)

@@ -27,7 +27,9 @@ func main() {
 	defer db.Close()
 
 	urlRepo := repositories.NewUrlRepo(db)
-	h := handlers.NewBaseHandler(urlRepo)
+	userRepo := repositories.NewUserRepo(db)
+
+	h := handlers.NewBaseHandler(urlRepo, userRepo)
 	r := routes.ServeRouter(h)
 
 	fmt.Println("Starting Server")
@@ -36,7 +38,7 @@ func main() {
 
 func ConnectDB() (*sqlx.DB, error) {
 
-	db, err := sqlx.Open("postgres", os.Getenv("DB_DSN"))
+	db, err := sqlx.Open("postgres", os.Getenv("DB_URLDSN"))
 	if err != nil {
 		log.Fatal(err)
 		return nil, err

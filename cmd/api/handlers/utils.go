@@ -2,11 +2,15 @@ package handlers
 
 import (
 	"encoding/json"
-	"math/rand"
+	"errors"
 	"net/http"
-	"net/url"
+	"net/mail"
+	"url-shortener/models"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
+// Parse JSON
 func writeJSON(w http.ResponseWriter, status int, wrap string, data interface{}) error {
 	wrapper := make(map[string]interface{})
 
@@ -37,18 +41,46 @@ func errorJSON(w http.ResponseWriter, statusCode int, err error) {
 	writeJSON(w, statusCode, "error", theError)
 }
 
-func generateHash() string {
-	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+// Verify user credentials
+func verifyParsedFields(user models.User) error {
 
-	hash := make([]byte, 5)
-	for i := range hash {
-		hash[i] = letterBytes[rand.Intn(len(letterBytes))]
+	err := verifyValidEmail(user.Email)
+	if err != nil {
+		return err
 	}
 
-	return string(hash)
+	err = verifyValidPassword(user.Password)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func IsUrl(str string) bool {
-	u, err := url.Parse(str)
-	return err == nil && u.Scheme != "" && u.Host != ""
+func verifyValidEmail(email string) error {
+	// Verify valid email
+	_, err := mail.ParseAddress(email)
+	if err != nil {
+		return errors.New("invalid email")
+	}
+	return nil
+}
+
+func verifyValidPassword(password string) error {
+	// Verify valid password
+	if password == "" || len(password) < 8 {
+		return errors.New("invalid password")
+	}
+	return nil
+}
+
+// Password Hash
+func hashPassword(password string) (string, error) {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 6)
+	return string(bytes), err
+}
+
+func checkPasswordHash(password, hash string) bool {
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }

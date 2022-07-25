@@ -3,22 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"math/rand"
 	"net/http"
+	"net/url"
 	"time"
 	"url-shortener/models"
 
 	"github.com/go-chi/chi/v5"
 )
-
-type BaseHandler struct {
-	urlRepo models.UrlShortRepository
-}
-
-func NewBaseHandler(urlRepo models.UrlShortRepository) *BaseHandler {
-	return &BaseHandler{
-		urlRepo: urlRepo,
-	}
-}
 
 func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request json
@@ -34,7 +26,7 @@ func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if !IsUrl(newUrl.Url) {
+	if !isUrl(newUrl.Url) {
 		errorJSON(w, http.StatusBadRequest, errors.New(`invalid url`))
 		return
 	}
@@ -50,7 +42,7 @@ func (h *BaseHandler) InsertUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Add into database
-	err = h.urlRepo.InsertUrlModel(newUrl)
+	err = h.urlRepo.InsertUrl(newUrl)
 	if err != nil {
 		errorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -145,4 +137,20 @@ func (h *BaseHandler) UpdateByHashHandler(w http.ResponseWriter, r *http.Request
 		errorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
+}
+
+func generateHash() string {
+	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+	hash := make([]byte, 5)
+	for i := range hash {
+		hash[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+
+	return string(hash)
+}
+
+func isUrl(str string) bool {
+	u, err := url.Parse(str)
+	return err == nil && u.Scheme != "" && u.Host != ""
 }
