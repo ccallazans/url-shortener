@@ -4,24 +4,53 @@ import (
 	"os"
 	"time"
 
+	"github.com/ccallazans/url-shortener/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func GenerateJwt(uuid string) (*string, error) {
-	var mySigningKey = []byte(os.Getenv("JWT_KEY"))
+type JWTClaim struct {
+	jwt.RegisteredClaims
+	UUID  string `json:"uuid"`
+	Email string `json:"email"`
+}
 
-	token := jwt.New(jwt.SigningMethodHS256)
-	claims := token.Claims.(jwt.MapClaims)
+func GenerateJWT(user *models.User) (*string, error) {
+	claims := &JWTClaim{
+		UUID:  user.UUID,
+		Email: user.Email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			Audience:  jwt.ClaimStrings{"localhost"},
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			Issuer:    "localhost",
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Subject:   user.UUID,
+		},
+	}
 
-	claims["authorized"] = true
-	claims["uuid"] = uuid
-	claims["exp"] = time.Now().Add(24 * time.Hour).Unix()
-
-	tokenString, err := token.SignedString(mySigningKey)
-
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
 	if err != nil {
 		return nil, err
 	}
-	return &tokenString, nil
 
+	return &tokenString, nil
 }
+
+// func ValidateToken(signedToken string) error {
+// 	token, err := jwt.ParseWithClaims(signedToken, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
+
+// 			return []byte(os.Getenv("JWT_KEY")), nil
+// 		},
+// 	)
+// 	if err != nil {
+// 		return err
+// 	}
+
+// 	_, ok := token.Claims.(*JWTClaim)
+// 	if !ok {
+// 		return errors.New("could not parse claims")
+// 	}
+
+// 	return nil
+// }

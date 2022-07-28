@@ -2,27 +2,30 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"time"
-	"url-shortener/models"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/ccallazans/url-shortener/models"
 )
 
 type UserRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewUserRepo(db *sqlx.DB) *UserRepo {
-	return &UserRepo{
+func NewUserRepo(db *sql.DB) UserRepo {
+	return UserRepo{
 		db: db,
 	}
 }
 
-func (r *UserRepo) CreateUser(userModel models.User) error {
+func (r *UserRepo) CreateUser(newUser models.User) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
 	// Insert new url
-	query := `INSERT INTO auth (uuid, email, password, created_at) VALUES ($1, $2, $3, $4)`
-	_, err := r.db.Exec(query, userModel.UUID, userModel.Email, userModel.Password, userModel.CreatedAt)
+	query := `INSERT INTO users (uuid, email, password, updated_at, created_at) VALUES ($1, $2, $3, $4, $5)`
+	_, err := r.db.ExecContext(ctx, query, newUser.UUID, newUser.Email, newUser.Password, newUser.UpdatedAt, newUser.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -30,57 +33,102 @@ func (r *UserRepo) CreateUser(userModel models.User) error {
 	return nil
 }
 
+func (r *UserRepo) GetAllUsers() ([]*models.User, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// query all data
+	query := `SELECT uuid, email, updated_at, created_at FROM users`
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var allUsers []*models.User
+
+	// Read all rows and save into 'urls'
+	for rows.Next() {
+		var oneUser models.User
+		err = rows.Scan(
+			&oneUser.UUID,
+			&oneUser.Email,
+			&oneUser.UpdatedAt,
+			&oneUser.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Append data
+		allUsers = append(allUsers, &oneUser)
+	}
+
+	return allUsers, nil
+}
+
 func (r *UserRepo) GetUserByEmail(email string) (*models.User, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `SELECT uuid, email, password FROM auth WHERE email = $1`
+	query := `SELECT uuid, email, password, updated_at, created_at FROM users WHERE email = $1`
 	row := r.db.QueryRowContext(ctx, query, email)
 
-	var user models.User
+	var oneUser models.User
 	err := row.Scan(
-		&user.UUID,
-		&user.Email,
-		&user.Password,
+		&oneUser.UUID,
+		&oneUser.Email,
+		&oneUser.Password,
+		&oneUser.UpdatedAt,
+		&oneUser.CreatedAt,
 	)
 	if err != nil {
 		return nil, err
 	}
 
-	return &user, nil
+	return &oneUser, nil
 }
 
-func (r *UserRepo) EmailExists(email string) bool {
+func (r *UserRepo) UpdateUserByEmail(oldEmail string, newEmail string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `SELECT email FROM auth WHERE email = $1`
-	row := r.db.QueryRowContext(ctx, query, email)
-
-	var verify models.User
-	err := row.Scan(
-		&verify.Email,
-	)
+	query := `UPDATE users SET email = $1 WHERE email = $2`
+	_, err := r.db.ExecContext(ctx, query, newEmail, oldEmail)
 	if err != nil {
-		return false
+		return err
 	}
 
-	return true
+	return nil
 }
 
-func (r *UserRepo) UUIDExists(uuid string) bool {
+func (r *UserRepo) DeleteUserByEmail(email string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `SELECT uuid FROM auth WHERE uuid = $1`
-	row := r.db.QueryRowContext(ctx, query, uuid)
+	query := `DELETE FROM users WHERE email = $1`
+	_, err := r.db.ExecContext(ctx, query, email)
+	if err != nil {
+		return err
+	}
 
-	var verify models.User
+	return nil
+}
+
+func (r *UserRepo) ValueExists(value string, column string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Query specific data
+	query := fmt.Sprintf(`SELECT %s FROM users WHERE %s = $1`, column, column)
+	row := r.db.QueryRowContext(ctx, query, value)
+
+	var user models.User
 	err := row.Scan(
-		&verify.UUID,
+		&user.Email,
 	)
 	if err != nil {
 		return false

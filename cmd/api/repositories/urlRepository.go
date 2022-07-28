@@ -2,27 +2,30 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"time"
-	"url-shortener/models"
 
-	"github.com/jmoiron/sqlx"
+	"github.com/ccallazans/url-shortener/models"
 )
 
 type UrlRepo struct {
-	db *sqlx.DB
+	db *sql.DB
 }
 
-func NewUrlRepo(db *sqlx.DB) *UrlRepo {
-	return &UrlRepo{
+func NewUrlRepo(db *sql.DB) UrlRepo {
+	return UrlRepo{
 		db: db,
 	}
 }
 
-func (r *UrlRepo) InsertUrl(newUrl models.UrlRequest) error {
+func (r *UrlRepo) CreateUrl(newUrl models.Url) error {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
 
 	// Insert new url
-	query := `INSERT INTO urls (url, hash, created_at) VALUES ($1, $2, $3)`
-	_, err := r.db.Exec(query, newUrl.Url, newUrl.Hash, newUrl.CreatedAt)
+	query := `INSERT INTO urls (short, url, created_by, updated_at, created_at) VALUES ($1, $2, $3, $4, $5)`
+	_, err := r.db.ExecContext(ctx, query, newUrl.Short, newUrl.Url, newUrl.CreatedBy, newUrl.UpdatedAt, newUrl.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -35,7 +38,7 @@ func (r *UrlRepo) GetAllUrls() ([]*models.Url, error) {
 	defer cancel()
 
 	// query all data
-	query := `SELECT id, hash, url, created_at FROM urls`
+	query := `SELECT id, short, url, created_by, updated_at, created_at FROM urls`
 	rows, err := r.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, err
@@ -49,8 +52,10 @@ func (r *UrlRepo) GetAllUrls() ([]*models.Url, error) {
 		var newUrl models.Url
 		err = rows.Scan(
 			&newUrl.ID,
-			&newUrl.Hash,
+			&newUrl.Short,
 			&newUrl.Url,
+			&newUrl.CreatedBy,
+			&newUrl.UpdatedAt,
 			&newUrl.CreatedAt,
 		)
 		if err != nil {
@@ -64,19 +69,21 @@ func (r *UrlRepo) GetAllUrls() ([]*models.Url, error) {
 	return allUrl, nil
 }
 
-func (r *UrlRepo) GetByHash(hash string) (*models.Url, error) {
+func (r *UrlRepo) GetUrlByShort(short string) (*models.Url, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `SELECT id, hash, url, created_at FROM urls WHERE hash = $1`
-	row := r.db.QueryRowContext(ctx, query, hash)
+	query := `SELECT id, short, url, created_by, updated_at, created_at FROM urls WHERE short = $1`
+	row := r.db.QueryRowContext(ctx, query, short)
 
 	var newUrl models.Url
 	err := row.Scan(
 		&newUrl.ID,
-		&newUrl.Hash,
+		&newUrl.Short,
 		&newUrl.Url,
+		&newUrl.CreatedBy,
+		&newUrl.UpdatedAt,
 		&newUrl.CreatedAt,
 	)
 	if err != nil {
@@ -86,13 +93,13 @@ func (r *UrlRepo) GetByHash(hash string) (*models.Url, error) {
 	return &newUrl, nil
 }
 
-func (r *UrlRepo) UpdateByHash(newUrl models.UrlRequest) error {
+func (r *UrlRepo) UpdateUrlByShort(short string, newUrl string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `UPDATE urls SET url = $1 WHERE hash = $2`
-	_, err := r.db.ExecContext(ctx, query, newUrl.Url, newUrl.Hash)
+	query := `UPDATE urls SET url = $1 WHERE short = $2`
+	_, err := r.db.ExecContext(ctx, query, newUrl, short)
 	if err != nil {
 		return err
 	}
@@ -100,17 +107,31 @@ func (r *UrlRepo) UpdateByHash(newUrl models.UrlRequest) error {
 	return nil
 }
 
-func (r *UrlRepo) HashExists(hash string) bool {
+func (r *UrlRepo) DeleteUrlByShort(short string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	// Query specific data
-	query := `SELECT hash FROM urls WHERE hash = $1`
-	row := r.db.QueryRowContext(ctx, query, hash)
+	query := `DELETE FROM urls WHERE short = $1`
+	_, err := r.db.ExecContext(ctx, query, short)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *UrlRepo) ValueExists(value string, column string) bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+
+	// Query specific data
+	query := fmt.Sprintf(`SELECT %s FROM urls WHERE %s = $1`, column, column)
+	row := r.db.QueryRowContext(ctx, query, value)
 
 	var newHash models.Url
 	err := row.Scan(
-		&newHash.Hash,
+		&newHash.Short,
 	)
 	if err != nil {
 		return false

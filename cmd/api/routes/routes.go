@@ -1,9 +1,8 @@
 package routes
 
 import (
-	"url-shortener/cmd/api/handlers"
-	mid "url-shortener/cmd/api/middleware"
-
+	"github.com/ccallazans/url-shortener/cmd/api/handlers"
+	"github.com/ccallazans/url-shortener/cmd/api/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -12,17 +11,18 @@ func ServeRouter(hand *handlers.BaseHandler) *chi.Mux {
 
 	// Public Routes
 	router.Group(func(r chi.Router) {
-		r.Get("/", hand.GetAllHandler)
-		r.Get("/{hash}", hand.GetByHashHandler)
+		r.Get("/", hand.GetAllUrlsHandler)
+		r.Get("/{short}", hand.GetUrlByShortHandler)
+
 		r.Post("/register", hand.CreateUserHandler)
 		r.Post("/login", hand.AuthUserHandler)
 	})
 
 	// Protected Routes
 	router.Group(func(r chi.Router) {
-		r.Use(mid.IsAuthorized)
-		r.Post("/create", hand.InsertUrlHandler)
-		r.Post("/edit", hand.UpdateByHashHandler)
+		r.Use(middleware.IsAuthorized)
+		r.Post("/create", hand.CreateUrlHandler)
+		r.Post("/edit", hand.UpdateUrlByShortHandler)
 	})
 
 	return router
