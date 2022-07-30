@@ -5,6 +5,7 @@ import (
 
 	"github.com/ccallazans/url-shortener/cmd/api/repositories"
 	"github.com/ccallazans/url-shortener/models"
+	"github.com/go-playground/validator/v10"
 )
 
 type BaseHandler struct {
@@ -22,3 +23,5 @@ func NewBaseHandler(db *sql.DB) *BaseHandler {
 		userRepo: &userRepo,
 	}
 }
+
+var validate = validator.New()

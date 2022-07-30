@@ -25,11 +25,11 @@ func main() {
 	}
 	defer db.Close()
 
-	h := handlers.NewBaseHandler(db)
-	r := routes.ServeRouter(h)
+	appHandler := handlers.NewBaseHandler(db)
+	router := routes.ServeRouter(appHandler)
 
 	fmt.Println("Starting Server")
-	err = http.ListenAndServe(":6000", r)
+	err = http.ListenAndServe(":5000", router)
 	if err != nil {
 		log.Println(err)
 	}

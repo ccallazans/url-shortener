@@ -22,7 +22,7 @@ func IsAuthorized(next http.Handler) http.Handler {
 
 		token, err := jwt.Parse(r.Header.Get("Authorization"), func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, fmt.Errorf("there was an error in parsing")
+				return nil, fmt.Errorf("error parsing token")
 			}
 			return mySigningKey, nil
 		})
@@ -32,12 +32,13 @@ func IsAuthorized(next http.Handler) http.Handler {
 			return
 		}
 
-		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		claims, ok := token.Claims.(jwt.MapClaims)
+		if ok && token.Valid {
 			ctx := context.WithValue(r.Context(), "email", claims["email"].(string))
 			next.ServeHTTP(w, r.WithContext(ctx))
 			return
 		}
 
-		utils.ErrorJSON(w, http.StatusUnauthorized, fmt.Errorf("sai daqui"))
+		utils.ErrorJSON(w, http.StatusUnauthorized, fmt.Errorf("token not valid"))
 	})
 }

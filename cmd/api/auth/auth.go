@@ -36,21 +36,3 @@ func GenerateJWT(user *models.User) (*string, error) {
 
 	return &tokenString, nil
 }
-
-// func ValidateToken(signedToken string) error {
-// 	token, err := jwt.ParseWithClaims(signedToken, &JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
-
-// 			return []byte(os.Getenv("JWT_KEY")), nil
-// 		},
-// 	)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	_, ok := token.Claims.(*JWTClaim)
-// 	if !ok {
-// 		return errors.New("could not parse claims")
-// 	}
-
-// 	return nil
-// }

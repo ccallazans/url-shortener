@@ -10,11 +10,8 @@ import (
 	"github.com/ccallazans/url-shortener/cmd/api/auth"
 	"github.com/ccallazans/url-shortener/cmd/api/utils"
 	"github.com/ccallazans/url-shortener/models"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
-
-var validate = validator.New()
 
 func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request json
@@ -81,7 +78,7 @@ func (h *BaseHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		Email    string `json:"email" validate:"required,email" db:"email"`
-		Password string `json:"password" validate:"required,min=8,max=30" db:"password"`
+		Password string `json:"password" validate:"required" db:"password"`
 	}
 
 	// Parse request json
@@ -91,6 +88,7 @@ func (h *BaseHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Validate input
 	err = validate.Struct(input)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusConflict, err)
