@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
 	"time"
 
@@ -33,7 +32,6 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Verify if email already exists
-	log.Println(h.userRepo.ValueExists(input.Email, "email"))
 	if h.userRepo.ValueExists(input.Email, "email") {
 		utils.ErrorJSON(w, http.StatusConflict, errors.New(`email already registred`))
 		return

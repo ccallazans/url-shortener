@@ -20,4 +20,8 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 )
 
-require github.com/go-playground/validator/v10 v10.11.0
+require (
+	github.com/go-chi/cors v1.2.1
+	github.com/go-playground/validator/v10 v10.11.0
+	golang.org/x/time v0.0.0-20220722155302-e5dcc9cfc0b9
+)

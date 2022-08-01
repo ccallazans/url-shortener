@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"log"
 	"math/rand"
 	"net/http"
 	"time"
@@ -13,12 +12,13 @@ import (
 	"github.com/ccallazans/url-shortener/cmd/api/utils"
 	"github.com/ccallazans/url-shortener/models"
 	"github.com/go-chi/chi/v5"
+	"github.com/golang-jwt/jwt/v4"
 )
 
 func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 
-	identification := r.Context().Value("email").(string)
-	log.Println(identification)
+	claims := r.Context().Value("user").(jwt.MapClaims)
+	identification := claims["email"].(string)
 
 	var input struct {
 		Url string `json:"url" validate:"required,url"`
@@ -47,7 +47,6 @@ func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if short exists
-	log.Printf(newUrl.Short)
 	if h.urlRepo.ValueExists(newUrl.Short, "short") {
 		utils.ErrorJSON(w, http.StatusConflict, errors.New(`error generating short`))
 		return
@@ -122,6 +121,12 @@ func (h *BaseHandler) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Req
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = validate.Struct(input)
+	if err != nil {
+		utils.ErrorJSON(w, http.StatusConflict, err)
 		return
 	}
 

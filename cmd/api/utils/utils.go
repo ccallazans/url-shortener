@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"net/http"
 
-	// "github.com/ccallazans/url-shortener/models"
 
 	"golang.org/x/crypto/bcrypt"
 )
