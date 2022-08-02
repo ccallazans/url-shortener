@@ -16,7 +16,7 @@ import (
 )
 
 func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
-
+	
 	claims := r.Context().Value("user").(jwt.MapClaims)
 	identification := claims["email"].(string)
 

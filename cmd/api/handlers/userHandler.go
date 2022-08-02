@@ -38,7 +38,7 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	newUser := models.User{
-		UUID:      uuid.New().String(),
+		UUID:      uuid.NewString(),
 		Email:     input.Email,
 		Password:  input.Password,
 		UpdatedAt: time.Now(),
