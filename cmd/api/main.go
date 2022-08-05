@@ -6,17 +6,21 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/ccallazans/url-shortener/internal/handlers"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
 
-func main() {
+func init() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
 
 	db, err := ConnectDB()
 	if err != nil {
@@ -24,11 +28,21 @@ func main() {
 	}
 	defer db.Close()
 
-	appHandler := handlers.NewBaseHandler(db)
-	router := NewRouter()
+	psql := handlers.NewPostgresqlHandlers(db)
+	handlers.NewHandlers(psql)
+	routes := NewRouter()
 
-	fmt.Println("Starting Server")
-	err = http.ListenAndServe(":5000", router)
+	srv := &http.Server{
+		Addr:              ":5000",
+		Handler:           routes,
+		IdleTimeout:       30 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		ReadHeaderTimeout: 5 * time.Second,
+		WriteTimeout:      5 * time.Second,
+	}
+
+	fmt.Println("Starting Server on port 5000")
+	srv.ListenAndServe()
 	if err != nil {
 		log.Println(err)
 	}

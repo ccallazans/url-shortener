@@ -7,12 +7,20 @@ import (
 	"github.com/ccallazans/url-shortener/internal/repository/dbrepo"
 )
 
+//Repo is the repository
+var MyRepo *DBRepo
+
 type DBRepo struct {
 	DB repository.DBRepo
 }
 
+// NewHandlers creates the handlers
+func NewHandlers(repo *DBRepo) {
+	MyRepo = repo
+}
+
 // NewPostgresqlHandlers creates db repo for postgres
-func NewHandlers(db *sql.DB) *DBRepo {
+func NewPostgresqlHandlers(db *sql.DB) *DBRepo {
 	return &DBRepo{
 		DB:  dbrepo.NewPostgresRepo(db),
 	}

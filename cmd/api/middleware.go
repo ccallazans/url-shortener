@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"net"
 	"net/http"
 	"os"
@@ -12,7 +13,8 @@ import (
 
 	"golang.org/x/time/rate"
 
-	"github.com/ccallazans/url-shortener/cmd/api/utils"
+	"github.com/ccallazans/url-shortener/internal/auth"
+	"github.com/ccallazans/url-shortener/internal/utils"
 	"github.com/golang-jwt/jwt/v4"
 )
 
@@ -25,21 +27,23 @@ func IsAuthorized(next http.Handler) http.Handler {
 		}
 
 		var mySigningKey = []byte(os.Getenv("JWT_KEY"))
+		var claims = auth.JWTClaim{}
 
-		token, err := jwt.Parse(r.Header.Get("Authorization"), func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, fmt.Errorf("error parsing token")
 			}
 			return mySigningKey, nil
 		})
+		log.Println(claims)
+		
 
 		if err != nil {
 			utils.ErrorJSON(w, http.StatusBadRequest, fmt.Errorf("token has expired"))
 			return
 		}
 
-		claims, ok := token.Claims.(jwt.MapClaims)
-		if ok && token.Valid {
+		if token.Valid {
 			type contextKey string
 			userContextKey := contextKey("user")
 
@@ -55,10 +59,9 @@ func IsAuthorized(next http.Handler) http.Handler {
 func RateLimitIp(next http.Handler) http.Handler {
 
 	type client struct {
-		limiter *rate.Limiter
+		limiter  *rate.Limiter
 		lastSeen time.Time
 	}
-		
 
 	var (
 		mu      sync.Mutex
@@ -76,12 +79,11 @@ func RateLimitIp(next http.Handler) http.Handler {
 		mu.Lock()
 
 		if _, found := clients[ip]; !found {
-			rt := rate.Every(5* time.Second) // Permite até 5 requisições por segundo
+			rt := rate.Every(5 * time.Second) // Permite até 5 requisições por segundo
 			clients[ip] = &client{limiter: rate.NewLimiter(rt, 1)}
 		}
 
 		clients[ip].lastSeen = time.Now()
-
 
 		if !clients[ip].limiter.Allow() {
 			mu.Unlock()
@@ -91,6 +93,5 @@ func RateLimitIp(next http.Handler) http.Handler {
 
 		mu.Unlock()
 		next.ServeHTTP(w, r)
-
 	})
 }

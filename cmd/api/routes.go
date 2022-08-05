@@ -1,13 +1,14 @@
 package main
 
 import (
-	"github.com/ccallazans/url-shortener/cmd/api/handlers"
-	"github.com/ccallazans/url-shortener/cmd/api/middleware"
+	"net/http"
+
+	"github.com/ccallazans/url-shortener/internal/handlers"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
 )
 
-func ewRouter(hand *handlers.BaseHandler) *chi.Mux {
+func NewRouter() http.Handler {
 	router := chi.NewRouter()
 
 	router.Use(cors.Handler(cors.Options{
@@ -19,22 +20,22 @@ func ewRouter(hand *handlers.BaseHandler) *chi.Mux {
 		MaxAge:           300,
 	}))
 
-	router.Use(middleware.RateLimitIp)
+	router.Use(RateLimitIp)
 
 	// Public Routes
 	router.Group(func(r chi.Router) {
-		r.Get("/", hand.GetAllUrlsHandler)
-		r.Get("/{short}", hand.GetUrlByShortHandler)
+		r.Get("/", handlers.MyRepo.GetAllUrlsHandler)
+		r.Get("/{short}", handlers.MyRepo.GetUrlByShortHandler)
 
-		r.Post("/register", hand.CreateUserHandler)
-		r.Post("/login", hand.AuthUserHandler)
+		r.Post("/register", handlers.MyRepo.CreateUserHandler)
+		r.Post("/login", handlers.MyRepo.AuthUserHandler)
 	})
 
 	// Protected Routes
 	router.Group(func(r chi.Router) {
-		r.Use(middleware.IsAuthorized)
-		r.Post("/create", hand.CreateUrlHandler)
-		r.Post("/edit", hand.UpdateUrlByShortHandler)
+		r.Use(IsAuthorized)
+		r.Post("/create", handlers.MyRepo.CreateUrlHandler)
+		r.Post("/edit", handlers.MyRepo.UpdateUrlByShortHandler)
 	})
 
 	return router

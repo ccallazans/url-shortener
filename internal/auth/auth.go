@@ -4,20 +4,20 @@ import (
 	"os"
 	"time"
 
-	"github.com/ccallazans/url-shortener/models"
+	"github.com/ccallazans/url-shortener/internal/models"
 	"github.com/golang-jwt/jwt/v4"
 )
 
 type JWTClaim struct {
+	User models.User `json:"user"`
 	jwt.RegisteredClaims
-	UUID  string `json:"uuid"`
-	Email string `json:"email"`
 }
 
 func GenerateJWT(user *models.User) (*string, error) {
+	user.Password = ""
+
 	claims := &JWTClaim{
-		UUID:  user.UUID,
-		Email: user.Email,
+		User: *user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Audience:  jwt.ClaimStrings{"localhost"},
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)),

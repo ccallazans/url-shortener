@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"time"
 
 	"github.com/ccallazans/url-shortener/internal/auth"
 	"github.com/ccallazans/url-shortener/internal/models"
 	"github.com/ccallazans/url-shortener/internal/utils"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -21,19 +21,20 @@ func (h *DBRepo) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusBadRequest, err)
+		utils.ErrorJSON(w, http.StatusBadRequest, utils.ErrWrongRequestBody)
 		return
 	}
 
+	validate := validator.New()
 	err = validate.Struct(input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusConflict, err)
+		utils.ErrorJSON(w, http.StatusConflict, utils.ErrInvalidRequirements)
 		return
 	}
 
 	// Verify if email already exists
 	if h.DB.UserValueExists(input.Email, "email") {
-		utils.ErrorJSON(w, http.StatusConflict, errors.New(`email already registred`))
+		utils.ErrorJSON(w, http.StatusConflict, utils.ErrEmailAlreadyExists)
 		return
 	}
 
@@ -47,7 +48,7 @@ func (h *DBRepo) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Verify if uuid already exists
 	if h.DB.UserValueExists(newUser.UUID, "uuid") {
-		utils.ErrorJSON(w, http.StatusInternalServerError, errors.New(`error creating user`))
+		utils.ErrorJSON(w, http.StatusInternalServerError, utils.ErrAddToDatabase)
 		return
 	}
 
@@ -82,35 +83,36 @@ func (h *DBRepo) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request json
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusBadRequest, err)
+		utils.ErrorJSON(w, http.StatusBadRequest, utils.ErrWrongRequestBody)
 		return
 	}
 
 	// Validate input
+	validate := validator.New()
 	err = validate.Struct(input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusConflict, err)
+		utils.ErrorJSON(w, http.StatusConflict, utils.ErrInvalidRequirements)
 		return
 	}
 
 	// Verify and get user
 	validUser, err := h.DB.GetUserByEmail(input.Email)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusNotFound, errors.New("email do not exist"))
+		utils.ErrorJSON(w, http.StatusNotFound, utils.ErrEmailDoNotExist)
 		return
 	}
 
 	// Check user password
 	err = utils.CheckPasswordHash(input.Password, validUser.Password)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusUnauthorized, errors.New("invalid password"))
+		utils.ErrorJSON(w, http.StatusUnauthorized, utils.ErrInvalidPassword)
 		return
 	}
 
 	// Generate user JWT
 	validToken, err := auth.GenerateJWT(validUser)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusInternalServerError, err)
+		utils.ErrorJSON(w, http.StatusInternalServerError, utils.ErrGenerateJWT)
 		return
 	}
 

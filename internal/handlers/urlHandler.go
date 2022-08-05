@@ -3,19 +3,21 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/ccallazans/url-shortener/internal/models"
 	"github.com/ccallazans/url-shortener/internal/utils"
 	"github.com/go-chi/chi/v5"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/go-playground/validator/v10"
 )
 
 func (h *DBRepo) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 
-	claims := r.Context().Value("user").(jwt.MapClaims)
-	identification := claims["email"].(string)
+	claims := r.Context().Value("user")//.(*models.User)
+	log.Println(claims)
+	identification := "asdasd"
 
 	var input struct {
 		Url string `json:"url" validate:"required,url"`
@@ -24,13 +26,14 @@ func (h *DBRepo) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request json
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusBadRequest, err)
+		utils.ErrorJSON(w, http.StatusBadRequest, utils.ErrWrongRequestBody)
 		return
 	}
 
+	validate := validator.New()
 	err = validate.Struct(input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusConflict, err)
+		utils.ErrorJSON(w, http.StatusConflict, utils.ErrInvalidRequirements)
 		return
 	}
 
@@ -52,7 +55,7 @@ func (h *DBRepo) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	// Add into database
 	err = h.DB.CreateUrl(newUrl)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusInternalServerError, err)
+		utils.ErrorJSON(w, http.StatusInternalServerError, utils.ErrAddToDatabase)
 		return
 	}
 
@@ -85,7 +88,7 @@ func (h *DBRepo) GetUrlByShortHandler(w http.ResponseWriter, r *http.Request) {
 	// Query data
 	newUrl, err := h.DB.GetUrlByShort(short)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusInternalServerError, err)
+		utils.ErrorJSON(w, http.StatusInternalServerError, utils.ErrValueDoNotExist)
 		return
 	}
 
@@ -117,19 +120,20 @@ func (h *DBRepo) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Request)
 
 	err := json.NewDecoder(r.Body).Decode(&input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusBadRequest, err)
+		utils.ErrorJSON(w, http.StatusBadRequest, utils.ErrWrongRequestBody)
 		return
 	}
 
+	validate := validator.New()
 	err = validate.Struct(input)
 	if err != nil {
-		utils.ErrorJSON(w, http.StatusConflict, err)
+		utils.ErrorJSON(w, http.StatusConflict, utils.ErrInvalidRequirements)
 		return
 	}
 
 	// if short dont exist
 	if !h.DB.UrlValueExists(input.Short, "short") {
-		utils.ErrorJSON(w, http.StatusNotFound, errors.New("short do not exist"))
+		utils.ErrorJSON(w, http.StatusNotFound, utils.ErrValueDoNotExist)
 		return
 	}
 

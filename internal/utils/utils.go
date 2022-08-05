@@ -27,16 +27,7 @@ func WriteJSON(w http.ResponseWriter, status int, wrap string, data interface{})
 }
 
 func ErrorJSON(w http.ResponseWriter, statusCode int, err error) {
-
-	type jsonError struct {
-		Message string `json:"message"`
-	}
-
-	theError := jsonError{
-		Message: err.Error(),
-	}
-
-	WriteJSON(w, statusCode, "error", theError)
+	WriteJSON(w, statusCode, "error", err.Error())
 }
 
 // Password Hash
