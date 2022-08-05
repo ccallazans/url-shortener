@@ -2,8 +2,8 @@ package utils
 
 import (
 	"encoding/json"
+	"math/rand"
 	"net/http"
-
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -57,4 +57,15 @@ func CheckPasswordHash(password string, hash string) error {
 	}
 
 	return nil
+}
+
+func GenerateShort() string {
+	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+
+	hash := make([]byte, 5)
+	for i := range hash {
+		hash[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+
+	return string(hash)
 }

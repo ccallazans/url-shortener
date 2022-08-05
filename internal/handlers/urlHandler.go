@@ -3,20 +3,17 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
-	"math/rand"
 	"net/http"
 	"time"
 
-	// "github.com/ccallazans/url-shortener/models"
-
-	"github.com/ccallazans/url-shortener/cmd/api/utils"
-	"github.com/ccallazans/url-shortener/models"
+	"github.com/ccallazans/url-shortener/internal/models"
+	"github.com/ccallazans/url-shortener/internal/utils"
 	"github.com/go-chi/chi/v5"
 	"github.com/golang-jwt/jwt/v4"
 )
 
-func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
-	
+func (h *DBRepo) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
+
 	claims := r.Context().Value("user").(jwt.MapClaims)
 	identification := claims["email"].(string)
 
@@ -39,7 +36,7 @@ func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Create new url
 	newUrl := models.Url{
-		Short:     generateShort(),
+		Short:     utils.GenerateShort(),
 		Url:       input.Url,
 		CreatedBy: identification,
 		UpdatedAt: time.Now(),
@@ -47,13 +44,13 @@ func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// if short exists
-	if h.urlRepo.ValueExists(newUrl.Short, "short") {
+	if h.DB.UrlValueExists(newUrl.Short, "short") {
 		utils.ErrorJSON(w, http.StatusConflict, errors.New(`error generating short`))
 		return
 	}
 
 	// Add into database
-	err = h.urlRepo.CreateUrl(newUrl)
+	err = h.DB.CreateUrl(newUrl)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -75,18 +72,18 @@ func (h *BaseHandler) CreateUrlHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func (h *BaseHandler) GetUrlByShortHandler(w http.ResponseWriter, r *http.Request) {
+func (h *DBRepo) GetUrlByShortHandler(w http.ResponseWriter, r *http.Request) {
 	// Get hash from url
 	short := chi.URLParam(r, "short")
 
 	// if dont exist
-	if !h.urlRepo.ValueExists(short, "short") {
+	if !h.DB.UrlValueExists(short, "short") {
 		utils.ErrorJSON(w, http.StatusNotFound, errors.New(`short do not exist`))
 		return
 	}
 
 	// Query data
-	newUrl, err := h.urlRepo.GetUrlByShort(short)
+	newUrl, err := h.DB.GetUrlByShort(short)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -96,9 +93,9 @@ func (h *BaseHandler) GetUrlByShortHandler(w http.ResponseWriter, r *http.Reques
 	http.Redirect(w, r, newUrl.Url, http.StatusPermanentRedirect)
 }
 
-func (h *BaseHandler) GetAllUrlsHandler(w http.ResponseWriter, r *http.Request) {
+func (h *DBRepo) GetAllUrlsHandler(w http.ResponseWriter, r *http.Request) {
 	// Query all rows
-	allUrls, err := h.urlRepo.GetAllUrls()
+	allUrls, err := h.DB.GetAllUrls()
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -111,7 +108,7 @@ func (h *BaseHandler) GetAllUrlsHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *BaseHandler) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Request) {
+func (h *DBRepo) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Request) {
 	// Decode request into variable
 	var input struct {
 		Short string `json:"short" validate:"required,len=5" db:"short"`
@@ -131,13 +128,13 @@ func (h *BaseHandler) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Req
 	}
 
 	// if short dont exist
-	if !h.urlRepo.ValueExists(input.Short, "short") {
+	if !h.DB.UrlValueExists(input.Short, "short") {
 		utils.ErrorJSON(w, http.StatusNotFound, errors.New("short do not exist"))
 		return
 	}
 
 	// Update by short
-	err = h.urlRepo.UpdateUrlByShort(input.Short, input.Url)
+	err = h.DB.UpdateUrlByShort(input.Short, input.Url)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -148,15 +145,4 @@ func (h *BaseHandler) UpdateUrlByShortHandler(w http.ResponseWriter, r *http.Req
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
 	}
-}
-
-func generateShort() string {
-	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
-
-	hash := make([]byte, 5)
-	for i := range hash {
-		hash[i] = letterBytes[rand.Intn(len(letterBytes))]
-	}
-
-	return string(hash)
 }

@@ -6,13 +6,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/ccallazans/url-shortener/cmd/api/auth"
-	"github.com/ccallazans/url-shortener/cmd/api/utils"
-	"github.com/ccallazans/url-shortener/models"
+	"github.com/ccallazans/url-shortener/internal/auth"
+	"github.com/ccallazans/url-shortener/internal/models"
+	"github.com/ccallazans/url-shortener/internal/utils"
 	"github.com/google/uuid"
 )
 
-func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *DBRepo) CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse request json
 	var input struct {
 		Email    string `json:"email" validate:"required,email" db:"email"`
@@ -32,7 +32,7 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Verify if email already exists
-	if h.userRepo.ValueExists(input.Email, "email") {
+	if h.DB.UserValueExists(input.Email, "email") {
 		utils.ErrorJSON(w, http.StatusConflict, errors.New(`email already registred`))
 		return
 	}
@@ -46,7 +46,7 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 
 	// Verify if uuid already exists
-	if h.userRepo.ValueExists(newUser.UUID, "uuid") {
+	if h.DB.UserValueExists(newUser.UUID, "uuid") {
 		utils.ErrorJSON(w, http.StatusInternalServerError, errors.New(`error creating user`))
 		return
 	}
@@ -59,7 +59,7 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 	newUser.Password = *hashedPassword
 
-	err = h.userRepo.CreateUser(newUser)
+	err = h.DB.CreateUser(newUser)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusInternalServerError, err)
 		return
@@ -72,7 +72,7 @@ func (h *BaseHandler) CreateUserHandler(w http.ResponseWriter, r *http.Request) 
 	}
 }
 
-func (h *BaseHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
+func (h *DBRepo) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	var input struct {
 		Email    string `json:"email" validate:"required,email" db:"email"`
@@ -94,7 +94,7 @@ func (h *BaseHandler) AuthUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Verify and get user
-	validUser, err := h.userRepo.GetUserByEmail(input.Email)
+	validUser, err := h.DB.GetUserByEmail(input.Email)
 	if err != nil {
 		utils.ErrorJSON(w, http.StatusNotFound, errors.New("email do not exist"))
 		return

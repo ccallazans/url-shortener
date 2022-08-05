@@ -7,8 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/ccallazans/url-shortener/cmd/api/handlers"
-	"github.com/ccallazans/url-shortener/cmd/api/routes"
+	"github.com/ccallazans/url-shortener/internal/handlers"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 )
@@ -26,7 +25,7 @@ func main() {
 	defer db.Close()
 
 	appHandler := handlers.NewBaseHandler(db)
-	router := routes.ServeRouter(appHandler)
+	router := NewRouter()
 
 	fmt.Println("Starting Server")
 	err = http.ListenAndServe(":5000", router)

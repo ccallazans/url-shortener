@@ -1,4 +1,4 @@
-package routes
+package main
 
 import (
 	"github.com/ccallazans/url-shortener/cmd/api/handlers"
@@ -7,9 +7,9 @@ import (
 	"github.com/go-chi/cors"
 )
 
-func ServeRouter(hand *handlers.BaseHandler) *chi.Mux {
+func ewRouter(hand *handlers.BaseHandler) *chi.Mux {
 	router := chi.NewRouter()
-	
+
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

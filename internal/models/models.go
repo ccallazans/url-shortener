@@ -19,15 +19,11 @@ type UrlResponse struct {
 	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
 
-type UrlRepository interface {
-	CreateUrl(newUrl Url) error
-
-	GetAllUrls() ([]*Url, error)
-	GetUrlByShort(short string) (*Url, error)
-
-	UpdateUrlByShort(short string, newUrl string) error
-
-	DeleteUrlByShort(short string) error
-
-	ValueExists(value string, column string) bool
+type User struct {
+	ID        int       `json:"id" db:"id"`
+	UUID      string    `json:"uuid" db:"uuid"`
+	Email     string    `json:"email" validate:"required,email" db:"email"`
+	Password  string    `json:"password" validate:"required,min=8,max=30" db:"password"`
+	UpdatedAt time.Time `json:"updated_at" db:"updated_at"`
+	CreatedAt time.Time `json:"created_at" db:"created_at"`
 }
