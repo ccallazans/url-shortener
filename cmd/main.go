@@ -1,19 +1,20 @@
 package main
 
 import (
+	"ccallazans/internal/db"
+	"ccallazans/internal/models"
+	"ccallazans/internal/repository/impl/sqliteImpl"
 	"log"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
-func init() {
-	_, err := gorm.Open(sqlite.Open("database.db"))
-	if err != nil {
-		log.Fatal("Could not connect to database: ", err)
-	}
-}
-
 func main() {
+	db, err := db.NewDB()
+	if err != nil {
+		log.Panic("Error connecting to database", err)
+	}
 
+	db.AutoMigrate(&models.Url{})
+
+	rp := sqliteImpl.NewSqliteRepository(db)
+	rp.SaveUrl(models.Url{Url: "asdasd", Hash: "asdasd"})
 }
