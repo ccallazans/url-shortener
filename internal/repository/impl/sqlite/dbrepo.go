@@ -9,6 +9,6 @@ type sqliteRepository struct {
 	DB *gorm.DB
 }
 
-func NewSqliteRepository(db *gorm.DB) repository.RepositoryInterface {
+func NewSqliteRepository(db *gorm.DB) repository.Testando {
 	return &sqliteRepository{DB: db}
 }

@@ -1,4 +1,5 @@
 package repository
 
-type RepositoryInterface interface {
+type Testando interface {
+	Save()
 }
