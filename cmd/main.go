@@ -1,20 +1,60 @@
 package main
 
 import (
-	"ccallazans/internal/db"
-	"ccallazans/internal/models"
-	"ccallazans/internal/repository/impl/sqliteImpl"
+	"context"
+	"database/sql"
+	"fmt"
 	"log"
+
+	"github.com/ccallazans/url-shortener/internal/database/sqliteImpl"
+	"github.com/ccallazans/url-shortener/internal/domain/models"
+	"github.com/ccallazans/url-shortener/internal/utils"
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func main() {
-	db, err := db.NewDB()
+
+	db, err := DBConnection()
 	if err != nil {
-		log.Panic("Error connecting to database", err)
+		log.Panic(err)
 	}
 
-	db.AutoMigrate(&models.Url{})
+	userRepository := sqliteImpl.NewSqliteUserRepository(db)
+	// urlRepository := sqliteImpl.NewSqliteUrlRepository(db)
 
-	rp := sqliteImpl.NewSqliteRepository(db)
-	rp.SaveUrl(models.Url{Url: "asdasd", Hash: "asdasd"})
+	err = userRepository.Save(context.Background(), &models.User{Username: "ciro", Password: "1234"})
+	if err != nil {
+		log.Panic(err)
+	}
+
+	myuser, err := userRepository.FindById(context.Background(), 12)
+	if err != nil {
+		log.Panic(err)
+	}
+
+	fmt.Println(myuser)
+
+	fmt.Println(err)
+}
+
+func DBConnection() (*sql.DB, error) {
+
+	db, err := sql.Open("sqlite3", "database.db")
+	if err != nil {
+		return nil, err
+	}
+	defer db.Close()
+
+	sql, err := utils.ReadSqlFile("internal/database/schema/schema.sql")
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = db.Exec(sql)
+	if err != nil {
+		return nil, err
+	}
+
+	return db, nil
+
 }

@@ -1,4 +1,4 @@
-package repository
+package service
 
 import (
 	"context"
@@ -6,7 +6,7 @@ import (
 	"github.com/ccallazans/url-shortener/internal/domain/models"
 )
 
-type UserRepositoryInterface interface {
+type UserServiceInterface interface {
 	Save(ctx context.Context, user *models.User) error
 	FindById(ctx context.Context, id int) (*models.User, error)
 	Update(ctx context.Context, user *models.User) error
