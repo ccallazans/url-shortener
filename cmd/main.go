@@ -1,16 +1,22 @@
 package main
 
 import (
-	"context"
 	"database/sql"
-	"fmt"
 	"log"
+	"os"
 
-	"github.com/ccallazans/url-shortener/internal/database/sqliteImpl"
-	"github.com/ccallazans/url-shortener/internal/domain/models"
+	"github.com/ccallazans/url-shortener/api/v1/router"
 	"github.com/ccallazans/url-shortener/internal/utils"
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 )
+
+func init() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+}
 
 func main() {
 
@@ -18,34 +24,24 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
+	defer db.Close()
 
-	userRepository := sqliteImpl.NewSqliteUserRepository(db)
-	// urlRepository := sqliteImpl.NewSqliteUrlRepository(db)
+	server := router.Config(db)
 
-	err = userRepository.Save(context.Background(), &models.User{Username: "ciro", Password: "1234"})
+	err = server.Run()
 	if err != nil {
 		log.Panic(err)
 	}
-
-	myuser, err := userRepository.FindById(context.Background(), 12)
-	if err != nil {
-		log.Panic(err)
-	}
-
-	fmt.Println(myuser)
-
-	fmt.Println(err)
 }
 
 func DBConnection() (*sql.DB, error) {
 
-	db, err := sql.Open("sqlite3", "database.db")
+	db, err := sql.Open(os.Getenv("DB_DRIVER"), os.Getenv("DB_STRING"))
 	if err != nil {
 		return nil, err
 	}
-	defer db.Close()
 
-	sql, err := utils.ReadSqlFile("internal/database/schema/schema.sql")
+	sql, err := utils.ReadSqlFile(os.Getenv("DB_SCHEMA"))
 	if err != nil {
 		return nil, err
 	}
