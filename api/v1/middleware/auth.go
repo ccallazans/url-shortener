@@ -17,12 +17,12 @@ func AuthMiddleware() gin.HandlerFunc {
 		// extract the token from the Authorization header
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing Authorization header"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "message": "missing Authorization header"})
 			return
 		}
 		authHeaderParts := strings.Split(authHeader, " ")
 		if len(authHeaderParts) != 2 || strings.ToLower(authHeaderParts[0]) != "bearer" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid Authorization header format"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "message": "invalid Authorization header format"})
 			return
 		}
 		tokenString := authHeaderParts[1]
@@ -35,12 +35,12 @@ func AuthMiddleware() gin.HandlerFunc {
 			return []byte(os.Getenv("AUTH_SECRET_KEY")), nil
 		})
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "message": err.Error()})
 			return
 		}
 		claims, ok := token.Claims.(*models.UserClaims)
 		if !ok || !token.Valid {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "unauthorized", "message": "invalid token"})
 			return
 		}
 

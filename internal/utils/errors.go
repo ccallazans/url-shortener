@@ -9,5 +9,11 @@ const PASSWORD_SHORT_ERROR = "error: short password"
 const PASSWORD_LONG_ERROR = "error: long password"
 
 // Handler
-
+const BAD_REQUEST = "bad request"
 const USER_CREATE_ERROR = "error: failed on create user"
+
+// Service
+const USERNAME_ALREADY_EXISTS = "username already exists"
+const WRONG_PASSWORD = "wrong password"
+const TOKEN_GENERATE_ERROR = "error generating token"
+const REQUIRE_INTEGER = "require integer"

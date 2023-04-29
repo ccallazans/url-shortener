@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"errors"
-	"fmt"
 	"os"
 	"strconv"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/ccallazans/url-shortener/internal/domain/repository"
 	"github.com/ccallazans/url-shortener/internal/domain/service"
+	"github.com/ccallazans/url-shortener/internal/utils"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -62,13 +62,12 @@ func (s *userService) FindById(ctx context.Context, id string) (*models.User, er
 
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		fmt.Printf("Erro ao converter a string para inteiro: %v", err)
 		return nil, err
 	}
 
 	userEntity, err := s.userRepository.FindById(ctx, idInt)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(utils.REQUIRE_INTEGER)
 	}
 
 	return mappers.NewUserMapper().UserEntityToUser(userEntity), nil
@@ -86,12 +85,12 @@ func (s *userService) Auth(ctx context.Context, user *models.User) (string, erro
 
 	validUser, err := s.userRepository.FindByUsername(ctx, user.Username)
 	if err != nil {
-		return "", errors.New("username do not exist")
+		return "", errors.New(utils.USERNAME_ALREADY_EXISTS)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(validUser.Password), []byte(user.Password))
 	if err != nil {
-		return "", errors.New("wrong password")
+		return "", errors.New(utils.WRONG_PASSWORD)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &models.UserClaims{
@@ -103,7 +102,7 @@ func (s *userService) Auth(ctx context.Context, user *models.User) (string, erro
 
 	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET_KEY"))) // change this to your own secret key
 	if err != nil {
-		return "", errors.New("error creating token")
+		return "", errors.New(utils.TOKEN_GENERATE_ERROR)
 	}
 
 	return tokenString, nil

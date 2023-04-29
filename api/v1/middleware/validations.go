@@ -15,7 +15,7 @@ func ValidateUserRequestMiddleware() gin.HandlerFunc {
 
 		err := c.ShouldBindJSON(&userRequest)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "bad request"})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "bad request", "message": err.Error()})
 			return
 		}
 
@@ -25,7 +25,7 @@ func ValidateUserRequestMiddleware() gin.HandlerFunc {
 
 		err = validation.Execute(&userRequest)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "bad request", "message": err.Error()})
 			return
 		}
 
