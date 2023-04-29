@@ -12,4 +12,6 @@ type UserServiceInterface interface {
 	FindById(ctx context.Context, id string) (*models.User, error)
 	Update(ctx context.Context, user *models.User) error
 	DeleteById(ctx context.Context, id int) error
+
+	Auth(ctx context.Context, user *models.User) (string, error)
 }

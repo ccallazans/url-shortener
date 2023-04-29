@@ -25,16 +25,22 @@ func Config(db *sql.DB) *gin.Engine {
 
 	// Handlers
 	userHandler := handlers.NewUserHandler(userService)
+	authHandler := handlers.NewAuthHandler(userService)
 
 	router := gin.Default()
 
 	v1Router := router.Group("/v1")
 	{
-		userRouter := v1Router.Group("/user")
+		userRouter := v1Router.Group("/user", middleware.AuthMiddleware())
 		{
 			userRouter.GET("/", userHandler.GetAllUsers)
 			userRouter.GET("/:id", userHandler.GetUser)
-			userRouter.POST("/", middleware.ValidateUserRequestMiddleware(), userHandler.CreateUser)
+		}
+
+		authRouter := v1Router.Group("/auth")
+		{
+			authRouter.POST("/login", middleware.ValidateUserRequestMiddleware(), authHandler.AuthUser)
+			authRouter.POST("/register", middleware.ValidateUserRequestMiddleware(), userHandler.CreateUser)
 		}
 	}
 

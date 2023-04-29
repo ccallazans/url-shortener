@@ -38,7 +38,11 @@ func (v *UsernameValidation) Execute(userRequest *models.UserRequest) error {
 		return errors.New(utils.USERNAME_INVALID_CHAR_ERROR)
 	}
 
-	v.Next.Execute(userRequest)
+	err := v.Next.Execute(userRequest)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
