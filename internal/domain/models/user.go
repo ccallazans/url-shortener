@@ -1,5 +1,13 @@
 package models
 
+type UserEntity struct {
+	ID       uint
+	Username string
+	Password string
+}
+
+//
+
 type User struct {
 	ID       uint
 	Username string
@@ -7,11 +15,11 @@ type User struct {
 	Urls     []Url
 }
 
-func (u *User) ToUserResponse() *UserResponse {
-	return &UserResponse{
-		Username: u.Username,
-		Urls: u.Urls,
-	}
+//
+
+type UserResponse struct {
+	Username string `json:"username"`
+	Urls     []Url  `json:"urls"`
 }
 
 //
@@ -19,18 +27,4 @@ func (u *User) ToUserResponse() *UserResponse {
 type UserRequest struct {
 	Username string `json:"username"`
 	Password string `json:"password"`
-}
-
-func (u *UserRequest) ToUser() *User {
-	return &User{
-		Username: u.Username,
-		Password: u.Password,
-	}
-}
-
-//
-
-type UserResponse struct {
-	Username string `json:"username"`
-	Urls     []Url  `json:"urls"`
 }

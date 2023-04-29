@@ -2,10 +2,9 @@ package handlers
 
 import (
 	"context"
-	"fmt"
 	"net/http"
-	"strconv"
 
+	"github.com/ccallazans/url-shortener/internal/domain/mappers"
 	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/ccallazans/url-shortener/internal/domain/service"
 	"github.com/gin-gonic/gin"
@@ -22,29 +21,23 @@ func NewUserHandler(userService service.UserServiceInterface) *UserHandler {
 }
 
 func (h *UserHandler) CreateUser(c *gin.Context) {
-	var userRequest models.UserRequest
-
-	if err := c.BindJSON(&userRequest); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	userRequest, exists := c.MustGet("request").(*models.UserRequest)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get user request"})
 		return
 	}
 
-	if err := h.userService.Save(context.TODO(), userRequest.ToUser()); err != nil {
+	err := h.userService.Save(context.TODO(), mappers.NewUserMapper().UserRequestToUser(userRequest))
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user": userRequest})
+	c.JSON(http.StatusCreated, mappers.NewUserMapper().UserRequestToUserResponse(userRequest))
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	idParam := c.Param("id")
-
-	id, err := strconv.Atoi(idParam)
-	if err != nil {
-		fmt.Printf("Erro ao converter a string para inteiro: %v", err)
-		return
-	}
+	id := c.Param("id")
 
 	user, err := h.userService.FindById(context.TODO(), id)
 	if err != nil {
@@ -52,5 +45,16 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, gin.H{"user": user.ToUserResponse()})
+	c.JSON(http.StatusCreated, mappers.NewUserMapper().UserToUserResponse(user))
+}
+
+func (h *UserHandler) GetAllUsers(c *gin.Context) {
+
+	users, err := h.userService.FindAll(context.TODO())
+	if err != nil {
+		c.JSON(http.StatusFound, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, mappers.NewUserMapper().UsersToUserResponses(users))
 }

@@ -14,13 +14,6 @@ type UrlRequest struct {
 	Hash string `json:"hash"`
 }
 
-func (u *UrlRequest) ToUrl() *Url {
-	return &Url{
-		Url: u.Url,
-		Hash: u.Hash,
-	}
-}
-
 //
 
 type UrlResponse struct {
