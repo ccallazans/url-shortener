@@ -2,17 +2,17 @@ package sqliteImpl
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/ccallazans/url-shortener/internal/domain/repository"
+	"gorm.io/gorm"
 )
 
 type sqliteUserRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewSqliteUserRepository(db *sql.DB) repository.UserRepositoryInterface {
+func NewSqliteUserRepository(db *gorm.DB) repository.UserRepositoryInterface {
 	return &sqliteUserRepository{
 		db: db,
 	}
@@ -20,50 +20,20 @@ func NewSqliteUserRepository(db *sql.DB) repository.UserRepositoryInterface {
 
 func (r *sqliteUserRepository) Save(ctx context.Context, user *models.UserEntity) error {
 
-	query := "INSERT INTO users (username, password) VALUES (?, ?)"
-
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	_, err = statement.ExecContext(ctx, user.Username, user.Password)
-	if err != nil {
-		return err
+	result := r.db.Create(&user)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil
 }
 
 func (r *sqliteUserRepository) FindAll(ctx context.Context) ([]*models.UserEntity, error) {
-	query := "SELECT * FROM users"
-
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := statement.QueryContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
 
 	var users []*models.UserEntity
-	for rows.Next() {
-		var user models.UserEntity
-
-		err := rows.Scan(&user.ID, &user.Username, &user.Password)
-		if err != nil {
-			return nil, err
-		}
-
-		users = append(users, &user)
-	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
+	result := r.db.Preload("Role").Preload("Urls").Find(&users)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return users, nil
@@ -71,35 +41,21 @@ func (r *sqliteUserRepository) FindAll(ctx context.Context) ([]*models.UserEntit
 
 func (r *sqliteUserRepository) FindById(ctx context.Context, id int) (*models.UserEntity, error) {
 
-	query := "SELECT * FROM users WHERE id = ?"
-
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	user := models.UserEntity{}
-	err = statement.QueryRowContext(ctx, id).Scan(&user.ID, &user.Username, &user.Password)
-	if err != nil {
-		return nil, err
+	var user models.UserEntity
+	result := r.db.Preload("Role").Preload("Urls").First(&user, "id = ?", id)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return &user, nil
 }
 
 func (r *sqliteUserRepository) FindByUsername(ctx context.Context, username string) (*models.UserEntity, error) {
-	
-	query := "SELECT * FROM users WHERE username = ?"
 
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
-	}
-
-	user := models.UserEntity{}
-	err = statement.QueryRowContext(ctx, username).Scan(&user.ID, &user.Username, &user.Password)
-	if err != nil {
-		return nil, err
+	var user models.UserEntity
+	result := r.db.Preload("Role").Preload("Urls").First(&user, "username = ?", username)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return &user, nil

@@ -1,7 +1,14 @@
 package handlers
 
 import (
+	"context"
+	"net/http"
+
+	"github.com/ccallazans/url-shortener/internal/domain/mappers"
+	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/ccallazans/url-shortener/internal/domain/service"
+	"github.com/ccallazans/url-shortener/internal/utils"
+	"github.com/gin-gonic/gin"
 )
 
 type UrlHandler struct {
@@ -14,18 +21,25 @@ func NewUrlHandler(urlService service.UrlServiceInterface) *UrlHandler {
 	}
 }
 
-// func (h *UrlHandler) CreateUrl(c *gin.Context) {
-// 	var urlRequest models.UrlRequest
+func (h *UrlHandler) CreateUrl(c *gin.Context) {
+	user, exists := c.MustGet("user").(*models.User)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": utils.INTERNAL_SERVER_ERROR})
+		return
+	}
 
-// 	if err := c.BindJSON(&urlRequest); err != nil {
-// 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	urlRequest, exists := c.MustGet("request").(*models.UrlRequest)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error", "message": utils.INTERNAL_SERVER_ERROR})
+		return
+	}
 
-// 	if err := h.urlService.Save(context.TODO(), urlRequest.ToUrl()); err != nil {
-// 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-// 		return
-// 	}
+	urlRequest.UserID = user.ID
 
-// 	c.JSON(http.StatusCreated, gin.H{"url": urlRequest})
-// }
+	err := h.urlService.Save(context.TODO(), mappers.NewUrlMapper().UrlRequestToUrl(urlRequest))
+	if err != nil {
+		info := utils.MatchError(err)
+		c.JSON(info.Status, gin.H{"error": info.ErrorType, "message": info.Message})
+		return
+	}
+}

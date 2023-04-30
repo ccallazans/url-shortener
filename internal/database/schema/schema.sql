@@ -11,3 +11,9 @@ CREATE TABLE IF NOT EXISTS urls (
     user_id INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
+
+CREATE TABLE IF NOT EXISTS roles (
+    role text NOT NULL UNIQUE PRIMARY KEY,
+    user_id INTEGER NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);

@@ -10,6 +10,13 @@ require (
 require github.com/golang-jwt/jwt/v4 v4.5.0
 
 require (
+	github.com/jinzhu/inflection v1.0.0 // indirect
+	github.com/jinzhu/now v1.1.5 // indirect
+	gorm.io/driver/sqlite v1.5.0 // indirect
+	gorm.io/gorm v1.25.0 // indirect
+)
+
+require (
 	github.com/bytedance/sonic v1.8.8 // indirect
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect

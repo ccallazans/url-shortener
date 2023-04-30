@@ -1,14 +1,15 @@
 package main
 
 import (
-	"database/sql"
 	"log"
 	"os"
 
 	"github.com/ccallazans/url-shortener/api/v1/router"
-	"github.com/ccallazans/url-shortener/internal/utils"
+	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 )
 
 func init() {
@@ -24,7 +25,6 @@ func main() {
 	if err != nil {
 		log.Panic(err)
 	}
-	defer db.Close()
 
 	server := router.Config(db)
 
@@ -34,22 +34,27 @@ func main() {
 	}
 }
 
-func DBConnection() (*sql.DB, error) {
+func DBConnection() (*gorm.DB, error) {
 
-	db, err := sql.Open(os.Getenv("DB_DRIVER"), os.Getenv("DB_STRING"))
+	db, err := gorm.Open(sqlite.Open(os.Getenv("DB_STRING")), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
 
-	sql, err := utils.ReadSqlFile(os.Getenv("DB_SCHEMA"))
+	err = db.AutoMigrate(&models.UserEntity{}, &models.Role{}, &models.Url{})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = db.Exec(sql)
-	if err != nil {
-		return nil, err
-	}
+	// sql, err := utils.ReadSqlFile(os.Getenv("DB_SCHEMA"))
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	// db = db.Raw(sql)
+	// if err != nil {
+	// 	return nil, err
+	// }
 
 	return db, nil
 

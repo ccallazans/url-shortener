@@ -4,6 +4,7 @@ import "github.com/ccallazans/url-shortener/internal/domain/models"
 
 type UserMapperInterface interface {
 	UserEntityToUser(userEntity *models.UserEntity) *models.User
+	UserEntitiesToUser(users []*models.UserEntity) []*models.User
 
 	UserToUserResponse(user *models.User) *models.UserResponse
 	UserToUserEntity(user *models.User) *models.UserEntity
@@ -24,6 +25,7 @@ func (mapper *UserMapper) UserEntityToUser(userEntity *models.UserEntity) *model
 		ID:       userEntity.ID,
 		Username: userEntity.Username,
 		Password: userEntity.Password,
+		Role: userEntity.Role,
 	}
 }
 
@@ -58,6 +60,17 @@ func (mapper *UserMapper) UsersToUserResponses(users []*models.User) []*models.U
 	}
 
 	return userResponses
+}
+
+func (mapper *UserMapper) UserEntitiesToUser(users []*models.UserEntity) []*models.User {
+	var userUsers []*models.User
+
+	for _, user := range users {
+		userUser := mapper.UserEntityToUser(user)
+		userUsers = append(userUsers, userUser)
+	}
+
+	return userUsers
 }
 
 func (mapper *UserMapper) UserRequestToUserResponse(userRequest *models.UserRequest) *models.UserResponse {

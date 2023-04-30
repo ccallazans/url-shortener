@@ -9,6 +9,7 @@ import (
 
 	"github.com/ccallazans/url-shortener/internal/domain/mappers"
 	"github.com/ccallazans/url-shortener/internal/domain/models"
+	"github.com/ccallazans/url-shortener/internal/domain/models/roles"
 	"github.com/ccallazans/url-shortener/internal/domain/repository"
 	"github.com/ccallazans/url-shortener/internal/domain/service"
 	"github.com/ccallazans/url-shortener/internal/utils"
@@ -30,67 +31,81 @@ func (s *userService) Save(ctx context.Context, user *models.User) error {
 
 	userExists, _ := s.userRepository.FindByUsername(ctx, user.Username)
 	if userExists != nil {
-		return errors.New("username already exists")
+		return errors.New(utils.USERNAME_ALREADY_EXISTS)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return err
+		return errors.New(utils.PASSWORD_HASH_ERROR)
 	}
 
-	user.Password = string(hashedPassword)
+	userEntity := models.UserEntity{
+		Username: user.Username,
+		Password: string(hashedPassword),
+		Role:     models.Role{Role: roles.USER},
+	}
 
-	return s.userRepository.Save(ctx, mappers.NewUserMapper().UserToUserEntity(user))
+	err = s.userRepository.Save(ctx, &userEntity)
+	if err != nil {
+		return errors.New(utils.ENTITY_SAVE_ERROR)
+	}
+
+	return nil
 }
 
 func (s *userService) FindAll(ctx context.Context) ([]*models.User, error) {
-	var users []*models.User
 
-	usersEntity, err := s.userRepository.FindAll(ctx)
+	users, err := s.userRepository.FindAll(ctx)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(utils.DATA_NOT_FOUND)
 	}
 
-	for _, userEntity := range usersEntity {
-		users = append(users, mappers.NewUserMapper().UserEntityToUser(userEntity))
-	}
-
-	return users, nil
+	return mappers.NewUserMapper().UserEntitiesToUser(users), nil
 }
 
 func (s *userService) FindById(ctx context.Context, id string) (*models.User, error) {
 
 	idInt, err := strconv.Atoi(id)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(utils.ATOI_ERROR)
 	}
 
-	userEntity, err := s.userRepository.FindById(ctx, idInt)
+	user, err := s.userRepository.FindById(ctx, idInt)
 	if err != nil {
-		return nil, errors.New(utils.REQUIRE_INTEGER)
+		return nil, errors.New(utils.USER_NOT_FOUND)
 	}
 
-	return mappers.NewUserMapper().UserEntityToUser(userEntity), nil
+	return mappers.NewUserMapper().UserEntityToUser(user), nil
+}
+
+func (s *userService) FindByUsername(ctx context.Context, username string) (*models.User, error) {
+
+	user, err := s.userRepository.FindByUsername(ctx, username)
+	if err != nil {
+		return nil, errors.New(utils.USER_NOT_FOUND)
+	}
+
+	return mappers.NewUserMapper().UserEntityToUser(user), nil
 }
 
 func (s *userService) Update(ctx context.Context, user *models.User) error {
-	return s.userRepository.Update(ctx, mappers.NewUserMapper().UserToUserEntity(user))
+	return nil
 }
 
 func (s *userService) DeleteById(ctx context.Context, id int) error {
-	return s.userRepository.DeleteById(ctx, id)
+	return nil
 }
 
 func (s *userService) Auth(ctx context.Context, user *models.User) (string, error) {
 
 	validUser, err := s.userRepository.FindByUsername(ctx, user.Username)
 	if err != nil {
-		return "", errors.New(utils.USERNAME_ALREADY_EXISTS)
+		return "", errors.New(utils.USER_NOT_FOUND)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(validUser.Password), []byte(user.Password))
 	if err != nil {
-		return "", errors.New(utils.WRONG_PASSWORD)
+		return "", errors.New(utils.INVALID_PASSWORD)
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, &models.UserClaims{
@@ -100,7 +115,7 @@ func (s *userService) Auth(ctx context.Context, user *models.User) (string, erro
 		},
 	})
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET_KEY"))) // change this to your own secret key
+	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_SECRET_KEY")))
 	if err != nil {
 		return "", errors.New(utils.TOKEN_GENERATE_ERROR)
 	}

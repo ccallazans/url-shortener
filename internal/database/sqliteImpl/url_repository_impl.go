@@ -2,17 +2,17 @@ package sqliteImpl
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/ccallazans/url-shortener/internal/domain/models"
 	"github.com/ccallazans/url-shortener/internal/domain/repository"
+	"gorm.io/gorm"
 )
 
 type sqliteUrlRepository struct {
-	db *sql.DB
+	db *gorm.DB
 }
 
-func NewSqliteUrlRepository(db *sql.DB) repository.UrlRepositoryInterface {
+func NewSqliteUrlRepository(db *gorm.DB) repository.UrlRepositoryInterface {
 	return &sqliteUrlRepository{
 		db: db,
 	}
@@ -20,34 +20,42 @@ func NewSqliteUrlRepository(db *sql.DB) repository.UrlRepositoryInterface {
 
 func (r *sqliteUrlRepository) Save(ctx context.Context, url *models.Url) error {
 
-	query := "INSERT INTO urls (url, hash, user_id) VALUES (?, ?, ?)"
-
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return err
-	}
-
-	_, err = statement.ExecContext(ctx, url.Url, url.Hash, url.UserID)
-	if err != nil {
-		return err
+	result := r.db.Create(&url)
+	if result.Error != nil {
+		return result.Error
 	}
 
 	return nil
 }
 
-func (r *sqliteUrlRepository) FindById(ctx context.Context, id int) (*models.Url, error) {
+func (r *sqliteUrlRepository) FindAll(ctx context.Context) ([]*models.Url, error) {
 
-	query := "SELECT * FROM urls WHERE id = ?"
-
-	statement, err := r.db.PrepareContext(ctx, query)
-	if err != nil {
-		return nil, err
+	var urls []*models.Url
+	result := r.db.Find(&urls)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
-	url := models.Url{}
-	err = statement.QueryRowContext(ctx, id).Scan(&url)
-	if err != nil {
-		return nil, err
+	return urls, nil
+}
+
+func (r *sqliteUrlRepository) FindById(ctx context.Context, id int) (*models.Url, error) {
+
+	var url models.Url
+	result := r.db.First(&url, "id = ?", id)
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return &url, nil
+}
+
+func (r *sqliteUrlRepository) FindByHash(ctx context.Context, hash string) (*models.Url, error) {
+
+	var url models.Url
+	result := r.db.First(&url, "hash = ?", hash)
+	if result.Error != nil {
+		return nil, result.Error
 	}
 
 	return &url, nil
