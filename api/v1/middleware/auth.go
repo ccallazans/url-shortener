@@ -78,6 +78,7 @@ func RoleMiddleware(roles ...string) gin.HandlerFunc {
 			}
 		}
 
-		c.AbortWithStatusJSON(http.StatusForbidden, gin.H{"error": "Forbidden", "message": "You are not authorized to access this resource."})
+		info := utils.MatchError(errors.New(utils.FORBIDDEN_ERROR))
+		c.AbortWithStatusJSON(info.Status, gin.H{"error": info.ErrorType, "message": info.Message})
 	}
 }

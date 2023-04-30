@@ -32,6 +32,8 @@ func Config(db *gorm.DB) *gin.Engine {
 
 	router := gin.Default()
 
+	router.GET("/:hash", urlHandler.RedirectUrl)
+
 	v1Router := router.Group("/v1")
 	{
 

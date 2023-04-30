@@ -21,7 +21,7 @@ func NewUrlService(urlRepository repository.UrlRepositoryInterface) service.UrlS
 	}
 }
 
-func (s *urlService) Save(ctx context.Context, url *models.Url) error {
+func (s *urlService) Save(ctx context.Context, url *models.Url) (*models.Url, error) {
 
 	if !url.HasHash() {
 		newHash := utils.GenerateHash()
@@ -30,15 +30,15 @@ func (s *urlService) Save(ctx context.Context, url *models.Url) error {
 
 	hashExists, _ := s.urlRepository.FindByHash(ctx, url.Hash)
 	if hashExists != nil {
-		return errors.New(utils.HASH_ALREADY_EXISTS)
+		return nil, errors.New(utils.HASH_ALREADY_EXISTS)
 	}
 
 	err := s.urlRepository.Save(ctx, url)
 	if err != nil {
-		return errors.New(utils.ENTITY_SAVE_ERROR)
+		return nil, errors.New(utils.ENTITY_SAVE_ERROR)
 	}
 
-	return nil
+	return url, nil
 }
 
 func (s *urlService) FindAll(ctx context.Context) ([]*models.Url, error) {
@@ -70,7 +70,7 @@ func (s *urlService) FindByHash(ctx context.Context, hash string) (*models.Url, 
 
 	url, err := s.urlRepository.FindByHash(ctx, hash)
 	if err != nil {
-		return nil, errors.New(utils.REQUIRE_INTEGER)
+		return nil, errors.New(utils.HASH_NOT_FOUND)
 	}
 
 	return url, nil

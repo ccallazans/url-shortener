@@ -36,10 +36,26 @@ func (h *UrlHandler) CreateUrl(c *gin.Context) {
 
 	urlRequest.UserID = user.ID
 
-	err := h.urlService.Save(context.TODO(), mappers.NewUrlMapper().UrlRequestToUrl(urlRequest))
+	url, err := h.urlService.Save(context.TODO(), mappers.NewUrlMapper().UrlRequestToUrl(urlRequest))
 	if err != nil {
 		info := utils.MatchError(err)
 		c.JSON(info.Status, gin.H{"error": info.ErrorType, "message": info.Message})
 		return
 	}
+
+	c.JSON(http.StatusCreated, mappers.NewUrlMapper().UrlToUrlResponse(url))
+}
+
+func (h *UrlHandler) RedirectUrl(c *gin.Context) {
+
+	hash := c.Param("hash")
+
+	url, err := h.urlService.FindByHash(context.TODO(), hash)
+	if err != nil {
+		info := utils.MatchError(err)
+		c.JSON(info.Status, gin.H{"error": info.ErrorType, "message": info.Message})
+		return
+	}
+
+	c.Redirect(http.StatusMovedPermanently, url.Url)
 }

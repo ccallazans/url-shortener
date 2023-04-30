@@ -7,7 +7,7 @@ import (
 )
 
 type UrlServiceInterface interface {
-	Save(ctx context.Context, url *models.Url) error
+	Save(ctx context.Context, url *models.Url) (*models.Url, error)
 	FindAll(ctx context.Context) ([]*models.Url, error)
 	FindById(ctx context.Context, id string) (*models.Url, error)
 	FindByHash(ctx context.Context, hash string) (*models.Url, error)
