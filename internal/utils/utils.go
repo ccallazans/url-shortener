@@ -1,56 +1,21 @@
 package utils
 
 import (
-	"encoding/json"
 	"math/rand"
-	"net/http"
-
-	"golang.org/x/crypto/bcrypt"
+	"os"
 )
 
-// Parse JSON
-func WriteJSON(w http.ResponseWriter, status int, wrap string, data interface{}) error {
-	wrapper := make(map[string]interface{})
+func ReadSqlFile(path string) (string, error) {
 
-	wrapper[wrap] = data
-
-	js, err := json.Marshal(wrapper)
+	sql_query, err := os.ReadFile(path)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	w.Write(js)
-
-	return nil
+	return string(sql_query), nil
 }
 
-func ErrorJSON(w http.ResponseWriter, statusCode int, err error) {
-	WriteJSON(w, statusCode, "error", err.Error())
-}
-
-// Password Hash
-func HashPassword(password string) (*string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
-	if err != nil {
-		return nil, err
-	}
-
-	hash := string(bytes)
-	return &hash, err
-}
-
-func CheckPasswordHash(password string, hash string) error {
-	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func GenerateShort() string {
+func GenerateHash() string {
 	var letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
 
 	hash := make([]byte, 5)

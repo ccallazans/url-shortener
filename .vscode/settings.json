@@ -1,3 +1,11 @@
 {
-    "makefile.extensionOutputFolder": "./.vscode"
+    "sqltools.useNodeRuntime": true,
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "db",
+            "database": "database.db"
+        }
+    ]
 }
