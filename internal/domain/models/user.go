@@ -22,7 +22,7 @@ type User struct {
 
 type UserResponse struct {
 	Username string `json:"username"`
-	Urls     []Url  `json:"urls"`
+	Urls     []UrlResponse  `json:"urls"`
 }
 
 //

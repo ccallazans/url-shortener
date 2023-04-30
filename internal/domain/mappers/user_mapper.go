@@ -25,14 +25,15 @@ func (mapper *UserMapper) UserEntityToUser(userEntity *models.UserEntity) *model
 		ID:       userEntity.ID,
 		Username: userEntity.Username,
 		Password: userEntity.Password,
-		Role: userEntity.Role,
+		Role:     userEntity.Role,
+		Urls:     userEntity.Urls,
 	}
 }
 
 func (mapper *UserMapper) UserToUserResponse(user *models.User) *models.UserResponse {
 	return &models.UserResponse{
 		Username: user.Username,
-		Urls:     user.Urls,
+		Urls:     NewUrlMapper().UrlsToUrlReponses(user.Urls),
 	}
 }
 

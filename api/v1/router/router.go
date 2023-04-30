@@ -37,7 +37,7 @@ func Config(db *gorm.DB) *gin.Engine {
 	v1Router := router.Group("/v1")
 	{
 
-		urlRouter := v1Router.Group("/url", middleware.AuthMiddleware())
+		urlRouter := v1Router.Group("/url", middleware.AuthMiddleware(), middleware.LimitIpRequests())
 		{
 			urlRouter.POST("/", middleware.ValidateUrlMiddleware(), urlHandler.CreateUrl)
 		}
