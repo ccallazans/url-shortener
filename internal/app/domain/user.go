@@ -11,9 +11,9 @@ type User struct {
 }
 
 type UserResponse struct {
-	UUID       uuid.UUID   `json:"uuid"`
-	Username   string      `json:"username"`
-	Role       string      `json:"role"`
+	UUID       uuid.UUID           `json:"uuid"`
+	Username   string              `json:"username"`
+	Role       string              `json:"role"`
 	Shorteners []ShortenerResponse `json:"shorteners"`
 }
 
@@ -25,15 +25,15 @@ func (u *User) ToResponse() UserResponse {
 	}
 
 	return UserResponse{
-		UUID: u.UUID,
-		Username: u.Username,
-		Role: u.Role,
+		UUID:       u.UUID,
+		Username:   u.Username,
+		Role:       u.Role,
 		Shorteners: shortnersResponse,
 	}
 }
 
 func UsersToResponse(users []User) []UserResponse {
-	
+
 	var usersResponse []UserResponse
 	for _, user := range users {
 		usersResponse = append(usersResponse, user.ToResponse())

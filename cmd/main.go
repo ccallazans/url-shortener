@@ -3,12 +3,9 @@ package main
 import (
 	"log"
 	"myapi/internal/app/adapter/handlers"
-	"myapi/internal/app/domain"
+	sqliteimpl "myapi/internal/app/adapter/sqlite"
 
 	"github.com/joho/godotenv"
-
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 const (
@@ -24,26 +21,11 @@ func init() {
 
 func main() {
 
-	db, err := DBConnection()
+	db, err := sqliteimpl.DBConnection()
 	if err != nil {
 		log.Panic(err)
 	}
 
 	server := handlers.RouterConfig(db)
 	server.Run()
-}
-
-func DBConnection() (*gorm.DB, error) {
-
-	db, err := gorm.Open(sqlite.Open("data.db"), &gorm.Config{})
-	if err != nil {
-		return nil, err
-	}
-
-	err = db.AutoMigrate(&domain.User{}, &domain.Shortener{})
-	if err != nil {
-		return nil, err
-	}
-
-	return db, nil
 }

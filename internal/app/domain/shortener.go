@@ -16,13 +16,13 @@ type ShortenerResponse struct {
 
 func (s *Shortener) ToResponse() ShortenerResponse {
 	return ShortenerResponse{
-		Url: s.Url,
+		Url:  s.Url,
 		Hash: s.Hash,
 	}
 }
 
 func ShortenersToResponse(shorteners []Shortener) []ShortenerResponse {
-	
+
 	var shortenersReponse []ShortenerResponse
 	for _, shortener := range shorteners {
 		shortenersReponse = append(shortenersReponse, shortener.ToResponse())
