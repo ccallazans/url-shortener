@@ -31,7 +31,7 @@ func (r *userRepository) Save(ctx context.Context, user *domain.User) error {
 func (r *userRepository) FindAll(ctx context.Context) ([]*domain.User, error) {
 
 	var users []*domain.User
-	result := r.db.Preload("Role").Preload("Urls").Find(&users)
+	result := r.db.Preload("Shorteners").Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -39,10 +39,10 @@ func (r *userRepository) FindAll(ctx context.Context) ([]*domain.User, error) {
 	return users, nil
 }
 
-func (r *userRepository) FindById(ctx context.Context, id int) (*domain.User, error) {
+func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (*domain.User, error) {
 
 	var user *domain.User
-	result := r.db.Preload("Role").Preload("Urls").First(&user, "id = ?", id)
+	result := r.db.Preload("Shorteners").First(&user, "uuid = ?", uuid)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -53,7 +53,7 @@ func (r *userRepository) FindById(ctx context.Context, id int) (*domain.User, er
 func (r *userRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
 
 	var user *domain.User
-	result := r.db.Preload("Role").Preload("Urls").First(&user, "username = ?", username)
+	result := r.db.Preload("Shorteners").First(&user, "username = ?", username)
 	if result.Error != nil {
 		return nil, result.Error
 	}

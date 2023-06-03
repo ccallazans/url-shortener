@@ -3,20 +3,18 @@ package usecase
 import (
 	"context"
 	"errors"
-	"os"
-	"strconv"
-	"time"
 
 	"myapi/internal/app/domain"
 	"myapi/internal/app/domain/repository"
-	"myapi/internal/app/interfaces/auth"
-	"myapi/utils"
+	"myapi/internal/app/shared"
+	"os"
+	"time"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
-const ()
 
 type UserUsecase struct {
 	userRepo repository.IUser
@@ -32,23 +30,24 @@ func (u *UserUsecase) Save(ctx context.Context, user *domain.User) error {
 
 	userExists, _ := u.userRepo.FindByUsername(ctx, user.Username)
 	if userExists != nil {
-		return errors.New(utils.USERNAME_ALREADY_EXISTS)
+		return errors.New(shared.USERNAME_ALREADY_EXISTS)
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return errors.New(utils.PASSWORD_HASH_ERROR)
+		return errors.New(shared.PASSWORD_HASH_ERROR)
 	}
 
 	userEntity := domain.User{
+		UUID:     uuid.New(),
 		Username: user.Username,
 		Password: string(hashedPassword),
-		Role:     domain.Role{Role: domain.USER},
+		Role:     domain.USER_ROLE,
 	}
 
 	err = u.userRepo.Save(ctx, &userEntity)
 	if err != nil {
-		return errors.New(utils.ENTITY_SAVE_ERROR)
+		return errors.New(shared.ENTITY_SAVE_ERROR)
 	}
 
 	return nil
@@ -58,22 +57,17 @@ func (u *UserUsecase) FindAll(ctx context.Context) ([]*domain.User, error) {
 
 	users, err := u.userRepo.FindAll(ctx)
 	if err != nil {
-		return nil, errors.New(utils.DATA_NOT_FOUND)
+		return nil, errors.New(shared.DATA_NOT_FOUND)
 	}
 
 	return users, nil
 }
 
-func (u *UserUsecase) FindById(ctx context.Context, id string) (*domain.User, error) {
+func (u *UserUsecase) FindByUUID(ctx context.Context, uuid string) (*domain.User, error) {
 
-	idInt, err := strconv.Atoi(id)
+	user, err := u.userRepo.FindByUUID(ctx, uuid)
 	if err != nil {
-		return nil, errors.New(utils.ATOI_ERROR)
-	}
-
-	user, err := u.userRepo.FindById(ctx, idInt)
-	if err != nil {
-		return nil, errors.New(utils.USER_NOT_FOUND)
+		return nil, errors.New(shared.USER_NOT_FOUND)
 	}
 
 	return user, nil
@@ -83,7 +77,7 @@ func (s *UserUsecase) FindByUsername(ctx context.Context, username string) (*dom
 
 	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
-		return nil, errors.New(utils.USER_NOT_FOUND)
+		return nil, errors.New(shared.USER_NOT_FOUND)
 	}
 
 	return user, nil
@@ -101,31 +95,31 @@ func (u *UserUsecase) Auth(ctx context.Context, user *domain.User) (string, erro
 
 	validUser, err := u.userRepo.FindByUsername(ctx, user.Username)
 	if err != nil {
-		return "", errors.New(utils.USER_NOT_FOUND)
+		return "", errors.New(shared.USER_NOT_FOUND)
 	}
 
 	err = bcrypt.CompareHashAndPassword([]byte(validUser.Password), []byte(user.Password))
 	if err != nil {
-		return "", errors.New(utils.INVALID_PASSWORD)
+		return "", errors.New(shared.INVALID_PASSWORD)
 	}
 
 	token, err := GenerateJWT(
-		&auth.UserAuth{
+		&shared.UserAuth{
 			UUID:     validUser.UUID,
 			Username: validUser.Username,
-			Role:     validUser.Role.Role,
+			Role:     validUser.Role,
 		},
 	)
 	if err != nil {
-		return "", errors.New(utils.TOKEN_GENERATE_ERROR)
+		return "", errors.New(shared.TOKEN_GENERATE_ERROR)
 	}
 
 	return *token, nil
 }
 
-func GenerateJWT(user *auth.UserAuth) (*string, error) {
+func GenerateJWT(user *shared.UserAuth) (*string, error) {
 
-	claims := &auth.JWTClaim{
+	claims := &shared.JWTClaim{
 		User: *user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "localhost",

@@ -1,10 +1,6 @@
 package domain
 
-const(
-	USER = "USER"
+const (
+	USER_ROLE = "USER"
+	ADMIN_ROLE = "ADMIN"
 )
-
-type Role struct {
-	ID   uint   `gorm:"primary_key"`
-	Role string `gorm:"column:role"`
-}
