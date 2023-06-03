@@ -8,7 +8,7 @@ type ResponseError struct {
 	Message    string `json:"message"`
 }
 
-func HandleError(err error) ResponseError {
+func HandleResponseError(err error) ResponseError {
 	switch err.Error() {
 	case USERNAME_ALREADY_EXISTS:
 		return ResponseError{StatusCode: http.StatusConflict, ErrorType: "Conflict", Message: "User already exists."}

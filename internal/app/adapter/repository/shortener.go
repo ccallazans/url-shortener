@@ -31,7 +31,7 @@ func (r *shortenerRepository) Save(ctx context.Context, shortener *domain.Shorte
 func (r *shortenerRepository) FindAll(ctx context.Context) ([]*domain.Shortener, error) {
 
 	var shorteners []*domain.Shortener
-	result := r.db.Preload("User").Find(&shorteners)
+	result := r.db.Find(&shorteners)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -42,7 +42,7 @@ func (r *shortenerRepository) FindAll(ctx context.Context) ([]*domain.Shortener,
 func (r *shortenerRepository) FindByHash(ctx context.Context, hash string) (*domain.Shortener, error) {
 
 	var shortener *domain.Shortener
-	result := r.db.Preload("User").First(&shortener, "hash = ?", hash)
+	result := r.db.Find(&shortener, "hash = ?", hash).Limit(1)
 	if result.Error != nil {
 		return nil, result.Error
 	}

@@ -131,7 +131,7 @@ func GenerateJWT(user *shared.UserAuth) (*string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_KEY")))
+	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_JWT_KEY")))
 	if err != nil {
 		return nil, err
 	}

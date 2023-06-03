@@ -31,23 +31,23 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	var userRequest UserRequest
 
-	err := validator.New().Struct(userRequest)
+	err := c.ShouldBindJSON(&userRequest)
 	if err != nil {
-		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
-	err = c.ShouldBindJSON(&userRequest)
+	err = validator.New().Struct(userRequest)
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
 	err = h.userUsecase.Save(context.TODO(), &domain.User{Username: userRequest.Username, Password: userRequest.Password})
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
@@ -60,7 +60,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 
 	user, err := h.userUsecase.FindByUUID(context.TODO(), uuid)
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
@@ -72,7 +72,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 
 	users, err := h.userUsecase.FindAll(context.TODO())
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
@@ -89,23 +89,23 @@ func (h *UserHandler) AuthUser(c *gin.Context) {
 
 	var userRequest UserRequest
 
-	err := validator.New().Struct(userRequest)
+	err := c.ShouldBindJSON(&userRequest)
 	if err != nil {
-		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
-	err = c.ShouldBindJSON(&userRequest)
+	err = validator.New().Struct(userRequest)
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
 	token, err := h.userUsecase.Auth(context.TODO(), &domain.User{Username: userRequest.Username, Password: userRequest.Password})
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}

@@ -25,11 +25,11 @@ func RouterConfig(db *gorm.DB) *gin.Engine {
 	shortenerHandler := NewShortenerHandler(shortenerUsecase)
 
 	router := gin.Default()
+	router.GET("/:hash", shortenerHandler.Redirect)
 	v1Router := router.Group("/v1")
 	{
-		shortenerRouter := v1Router.Group("/url", middleware.AuthenticationMiddleware())
+		shortenerRouter := v1Router.Group("/shortener", middleware.AuthenticationMiddleware())
 		shortenerRouter.POST("/", shortenerHandler.CreateShortener)
-		shortenerRouter.GET("/:hash", shortenerHandler.Redirect)
 
 		userRouter := v1Router.Group("/user", middleware.AuthenticationMiddleware())
 		userRouter.GET("/", userHandler.GetAllUsers)

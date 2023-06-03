@@ -42,7 +42,7 @@ func (r *userRepository) FindAll(ctx context.Context) ([]*domain.User, error) {
 func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (*domain.User, error) {
 
 	var user *domain.User
-	result := r.db.Preload("Shorteners").First(&user, "uuid = ?", uuid)
+	result := r.db.Preload("Shorteners").Find(&user, "uuid = ?", uuid).Limit(1)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -53,7 +53,7 @@ func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (*domain.U
 func (r *userRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
 
 	var user *domain.User
-	result := r.db.Preload("Shorteners").First(&user, "username = ?", username)
+	result := r.db.Preload("Shorteners").Find(&user, "username = ?", username).Limit(1)
 	if result.Error != nil {
 		return nil, result.Error
 	}

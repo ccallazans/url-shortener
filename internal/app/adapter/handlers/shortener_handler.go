@@ -37,28 +37,28 @@ func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
 
 	var shortenerRequest ShortenerRequest
 
-	err := validator.New().Struct(shortenerRequest)
+	err := c.ShouldBindJSON(&shortenerRequest)
 	if err != nil {
-		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
-	err = c.ShouldBindJSON(&shortenerRequest)
+	err = validator.New().Struct(shortenerRequest)
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
-	err = h.shortenerUsecase.Save(context.TODO(), &domain.Shortener{Url: shortenerRequest.Url, User: user.UUID})
+	shortener, err := h.shortenerUsecase.Save(context.TODO(), &domain.Shortener{Url: shortenerRequest.Url, User: user.UUID})
 	if err != nil {
-		response := shared.HandleError(err)
+		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 
-	c.JSON(http.StatusCreated, shortenerRequest)
+	c.JSON(http.StatusCreated, shortener)
 }
 
 func (h *ShortenerHandler) Redirect(c *gin.Context) {
@@ -67,8 +67,8 @@ func (h *ShortenerHandler) Redirect(c *gin.Context) {
 
 	url, err := h.shortenerUsecase.FindByHash(context.TODO(), hash)
 	if err != nil {
-		response := shared.HandleError(err)
-		c.AbortWithStatusJSON(response.StatusCode, response)
+		response := shared.HandleResponseError(err)
+		c.AbortWithStatusJSON(response.StatusCode, hash)
 		return
 	}
 
