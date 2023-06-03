@@ -17,17 +17,27 @@ type UserResponse struct {
 	Shorteners []ShortenerResponse `json:"shorteners"`
 }
 
-func (u *User) toResponse() UserResponse {
+func (u *User) ToResponse() UserResponse {
 
-	var shortnerResponses []ShortenerResponse
+	var shortnersResponse []ShortenerResponse
 	for _, resp := range u.Shorteners {
-		shortnerResponses = append(shortnerResponses, resp.toResponse())
+		shortnersResponse = append(shortnersResponse, resp.ToResponse())
 	}
 
 	return UserResponse{
 		UUID: u.UUID,
 		Username: u.Username,
 		Role: u.Role,
-		Shorteners: shortnerResponses,
+		Shorteners: shortnersResponse,
 	}
+}
+
+func UsersToResponse(users []User) []UserResponse {
+	
+	var usersResponse []UserResponse
+	for _, user := range users {
+		usersResponse = append(usersResponse, user.ToResponse())
+	}
+
+	return usersResponse
 }

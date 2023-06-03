@@ -58,7 +58,7 @@ func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, shortener)
+	c.JSON(http.StatusCreated, shortener.ToResponse())
 }
 
 func (h *ShortenerHandler) Redirect(c *gin.Context) {

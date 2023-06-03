@@ -18,7 +18,7 @@ func NewUserRepository(db *gorm.DB) repository.IUser {
 	}
 }
 
-func (r *userRepository) Save(ctx context.Context, user *domain.User) error {
+func (r *userRepository) Save(ctx context.Context, user domain.User) error {
 
 	result := r.db.Create(&user)
 	if result.Error != nil {
@@ -28,9 +28,9 @@ func (r *userRepository) Save(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (r *userRepository) FindAll(ctx context.Context) ([]*domain.User, error) {
+func (r *userRepository) FindAll(ctx context.Context) ([]domain.User, error) {
 
-	var users []*domain.User
+	var users []domain.User
 	result := r.db.Preload("Shorteners").Find(&users)
 	if result.Error != nil {
 		return nil, result.Error
@@ -39,23 +39,23 @@ func (r *userRepository) FindAll(ctx context.Context) ([]*domain.User, error) {
 	return users, nil
 }
 
-func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (*domain.User, error) {
+func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (domain.User, error) {
 
-	var user *domain.User
+	var user domain.User
 	result := r.db.Preload("Shorteners").Find(&user, "uuid = ?", uuid).Limit(1)
 	if result.Error != nil {
-		return nil, result.Error
+		return domain.User{}, result.Error
 	}
 
 	return user, nil
 }
 
-func (r *userRepository) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+func (r *userRepository) FindByUsername(ctx context.Context, username string) (domain.User, error) {
 
-	var user *domain.User
+	var user domain.User
 	result := r.db.Preload("Shorteners").Find(&user, "username = ?", username).Limit(1)
 	if result.Error != nil {
-		return nil, result.Error
+		return domain.User{}, result.Error
 	}
 
 	return user, nil

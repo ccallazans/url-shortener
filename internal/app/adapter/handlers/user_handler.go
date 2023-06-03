@@ -45,7 +45,7 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 		return
 	}
 
-	err = h.userUsecase.Save(context.TODO(), &domain.User{Username: userRequest.Username, Password: userRequest.Password})
+	err = h.userUsecase.Save(context.TODO(), domain.User{Username: userRequest.Username, Password: userRequest.Password})
 	if err != nil {
 		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
@@ -65,7 +65,7 @@ func (h *UserHandler) GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, user)
+	c.JSON(http.StatusCreated, user.ToResponse())
 }
 
 func (h *UserHandler) GetAllUsers(c *gin.Context) {
@@ -77,7 +77,7 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusCreated, users)
+	c.JSON(http.StatusCreated, domain.UsersToResponse(users))
 }
 
 func (h *UserHandler) AuthUser(c *gin.Context) {
@@ -103,7 +103,7 @@ func (h *UserHandler) AuthUser(c *gin.Context) {
 		return
 	}
 
-	token, err := h.userUsecase.Auth(context.TODO(), &domain.User{Username: userRequest.Username, Password: userRequest.Password})
+	token, err := h.userUsecase.Auth(context.TODO(), domain.User{Username: userRequest.Username, Password: userRequest.Password})
 	if err != nil {
 		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)

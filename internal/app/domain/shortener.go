@@ -14,9 +14,19 @@ type ShortenerResponse struct {
 	Hash string `json:"hash"`
 }
 
-func (s *Shortener) toResponse() ShortenerResponse {
+func (s *Shortener) ToResponse() ShortenerResponse {
 	return ShortenerResponse{
 		Url: s.Url,
 		Hash: s.Hash,
 	}
+}
+
+func ShortenersToResponse(shorteners []Shortener) []ShortenerResponse {
+	
+	var shortenersReponse []ShortenerResponse
+	for _, shortener := range shorteners {
+		shortenersReponse = append(shortenersReponse, shortener.ToResponse())
+	}
+
+	return shortenersReponse
 }

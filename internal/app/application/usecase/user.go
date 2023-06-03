@@ -25,10 +25,10 @@ func NewUserUsecase(userRepo repository.IUser) UserUsecase {
 	}
 }
 
-func (u *UserUsecase) Save(ctx context.Context, user *domain.User) error {
+func (u *UserUsecase) Save(ctx context.Context, user domain.User) error {
 
-	userExists, _ := u.userRepo.FindByUsername(ctx, user.Username)
-	if userExists != nil {
+	_, err := u.userRepo.FindByUsername(ctx, user.Username)
+	if err == nil {
 		return errors.New(shared.USERNAME_ALREADY_EXISTS)
 	}
 
@@ -44,7 +44,7 @@ func (u *UserUsecase) Save(ctx context.Context, user *domain.User) error {
 		Role:     domain.USER_ROLE,
 	}
 
-	err = u.userRepo.Save(ctx, &userEntity)
+	err = u.userRepo.Save(ctx, userEntity)
 	if err != nil {
 		return errors.New(shared.ENTITY_SAVE_ERROR)
 	}
@@ -52,7 +52,7 @@ func (u *UserUsecase) Save(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (u *UserUsecase) FindAll(ctx context.Context) ([]*domain.User, error) {
+func (u *UserUsecase) FindAll(ctx context.Context) ([]domain.User, error) {
 
 	users, err := u.userRepo.FindAll(ctx)
 	if err != nil {
@@ -62,27 +62,27 @@ func (u *UserUsecase) FindAll(ctx context.Context) ([]*domain.User, error) {
 	return users, nil
 }
 
-func (u *UserUsecase) FindByUUID(ctx context.Context, uuid string) (*domain.User, error) {
+func (u *UserUsecase) FindByUUID(ctx context.Context, uuid string) (domain.User, error) {
 
 	user, err := u.userRepo.FindByUUID(ctx, uuid)
 	if err != nil {
-		return nil, errors.New(shared.USER_NOT_FOUND)
+		return domain.User{}, errors.New(shared.USER_NOT_FOUND)
 	}
 
 	return user, nil
 }
 
-func (s *UserUsecase) FindByUsername(ctx context.Context, username string) (*domain.User, error) {
+func (s *UserUsecase) FindByUsername(ctx context.Context, username string) (domain.User, error) {
 
 	user, err := s.userRepo.FindByUsername(ctx, username)
 	if err != nil {
-		return nil, errors.New(shared.USER_NOT_FOUND)
+		return domain.User{}, errors.New(shared.USER_NOT_FOUND)
 	}
 
 	return user, nil
 }
 
-func (s *UserUsecase) Update(ctx context.Context, user *domain.User) error {
+func (s *UserUsecase) Update(ctx context.Context, user domain.User) error {
 	return nil
 }
 
@@ -90,7 +90,7 @@ func (s *UserUsecase) DeleteById(ctx context.Context, id int) error {
 	return nil
 }
 
-func (u *UserUsecase) Auth(ctx context.Context, user *domain.User) (string, error) {
+func (u *UserUsecase) Auth(ctx context.Context, user domain.User) (string, error) {
 
 	validUser, err := u.userRepo.FindByUsername(ctx, user.Username)
 	if err != nil {
@@ -103,7 +103,7 @@ func (u *UserUsecase) Auth(ctx context.Context, user *domain.User) (string, erro
 	}
 
 	token, err := GenerateJWT(
-		&shared.UserAuth{
+		shared.UserAuth{
 			UUID:     validUser.UUID,
 			Username: validUser.Username,
 			Role:     validUser.Role,
@@ -113,13 +113,13 @@ func (u *UserUsecase) Auth(ctx context.Context, user *domain.User) (string, erro
 		return "", errors.New(shared.TOKEN_GENERATE_ERROR)
 	}
 
-	return *token, nil
+	return token, nil
 }
 
-func GenerateJWT(user *shared.UserAuth) (*string, error) {
+func GenerateJWT(user shared.UserAuth) (string, error) {
 
 	claims := &shared.JWTClaim{
-		User: *user,
+		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "localhost",
 			Subject:   user.UUID.String(),
@@ -133,8 +133,8 @@ func GenerateJWT(user *shared.UserAuth) (*string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	tokenString, err := token.SignedString([]byte(os.Getenv("AUTH_JWT_KEY")))
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	return &tokenString, nil
+	return tokenString, nil
 }

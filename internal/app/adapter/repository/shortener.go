@@ -18,7 +18,7 @@ func NewShortenerRepository(db *gorm.DB) repository.IShortener {
 	}
 }
 
-func (r *shortenerRepository) Save(ctx context.Context, shortener *domain.Shortener) error {
+func (r *shortenerRepository) Save(ctx context.Context, shortener domain.Shortener) error {
 
 	result := r.db.Create(shortener)
 	if result.Error != nil {
@@ -28,9 +28,9 @@ func (r *shortenerRepository) Save(ctx context.Context, shortener *domain.Shorte
 	return nil
 }
 
-func (r *shortenerRepository) FindAll(ctx context.Context) ([]*domain.Shortener, error) {
+func (r *shortenerRepository) FindAll(ctx context.Context) ([]domain.Shortener, error) {
 
-	var shorteners []*domain.Shortener
+	var shorteners []domain.Shortener
 	result := r.db.Find(&shorteners)
 	if result.Error != nil {
 		return nil, result.Error
@@ -39,12 +39,12 @@ func (r *shortenerRepository) FindAll(ctx context.Context) ([]*domain.Shortener,
 	return shorteners, nil
 }
 
-func (r *shortenerRepository) FindByHash(ctx context.Context, hash string) (*domain.Shortener, error) {
+func (r *shortenerRepository) FindByHash(ctx context.Context, hash string) (domain.Shortener, error) {
 
-	var shortener *domain.Shortener
+	var shortener domain.Shortener
 	result := r.db.Find(&shortener, "hash = ?", hash).Limit(1)
 	if result.Error != nil {
-		return nil, result.Error
+		return domain.Shortener{}, result.Error
 	}
 
 	return shortener, nil
