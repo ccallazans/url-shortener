@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"errors"
 
 	"myapi/internal/app/application/usecase"
 	"myapi/internal/app/domain"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -30,12 +32,19 @@ func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
 	}
 
 	type ShortenerRequest struct {
-		Url string `json:"url"`
+		Url string `json:"url"  validate:"required"`
 	}
 
 	var shortenerRequest ShortenerRequest
 
-	err := c.ShouldBindJSON(&shortenerRequest)
+	err := validator.New().Struct(shortenerRequest)
+	if err != nil {
+		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		c.AbortWithStatusJSON(response.StatusCode, response)
+		return
+	}
+
+	err = c.ShouldBindJSON(&shortenerRequest)
 	if err != nil {
 		response := shared.HandleError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)

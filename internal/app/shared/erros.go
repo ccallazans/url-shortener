@@ -91,7 +91,7 @@ const (
 	TOKEN_GENERATE_ERROR    = "failed to generate token"
 	INVALID_PASSWORD        = "invalid password"
 
-	// MIDDLEWARE
+	// Middleware
 	AUTHORIZATION_HEADER_EMPTY        = "empty authorization header"
 	AUTHORIZATION_HEADER_FORMAT_ERROR = "invalid Authorization header format"
 	INVALID_SIGNING_METHOD            = "invalid signing method"

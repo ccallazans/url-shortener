@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"context"
+	"errors"
 	"myapi/internal/app/application/usecase"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/shared"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 )
 
 type UserHandler struct {
@@ -23,13 +25,20 @@ func NewUserHandler(userUsecase usecase.UserUsecase) *UserHandler {
 func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	type UserRequest struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username string `json:"username" validate:"required"`
+		Password string `json:"password" validate:"required"`
 	}
 
 	var userRequest UserRequest
 
-	err := c.ShouldBindJSON(&userRequest)
+	err := validator.New().Struct(userRequest)
+	if err != nil {
+		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		c.AbortWithStatusJSON(response.StatusCode, response)
+		return
+	}
+
+	err = c.ShouldBindJSON(&userRequest)
 	if err != nil {
 		response := shared.HandleError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
@@ -74,13 +83,20 @@ func (h *UserHandler) GetAllUsers(c *gin.Context) {
 func (h *UserHandler) AuthUser(c *gin.Context) {
 
 	type UserRequest struct {
-		Username string `json:"username"`
-		Password string `json:"password"`
+		Username string `json:"username" validate:"required"`
+		Password string `json:"password" validate:"required"`
 	}
 
 	var userRequest UserRequest
 
-	err := c.ShouldBindJSON(&userRequest)
+	err := validator.New().Struct(userRequest)
+	if err != nil {
+		response := shared.HandleError(errors.New(shared.BAD_REQUEST))
+		c.AbortWithStatusJSON(response.StatusCode, response)
+		return
+	}
+
+	err = c.ShouldBindJSON(&userRequest)
 	if err != nil {
 		response := shared.HandleError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)

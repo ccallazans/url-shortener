@@ -15,7 +15,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-
 type UserUsecase struct {
 	userRepo repository.IUser
 }
