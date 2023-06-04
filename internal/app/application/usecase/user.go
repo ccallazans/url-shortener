@@ -4,14 +4,16 @@ import (
 	"context"
 	"errors"
 
+	"myapi/internal/app/application/usecase/auth"
+	"myapi/internal/app/application/usecase/factory"
 	"myapi/internal/app/domain"
+
 	"myapi/internal/app/domain/repository"
 	"myapi/internal/app/shared"
 	"os"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -32,16 +34,9 @@ func (u *UserUsecase) Save(ctx context.Context, user domain.User) error {
 		return errors.New(shared.USERNAME_ALREADY_EXISTS)
 	}
 
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
+	userEntity, err := factory.NewUserFactory(user.Username, user.Password)
 	if err != nil {
-		return errors.New(shared.PASSWORD_HASH_ERROR)
-	}
-
-	userEntity := domain.User{
-		UUID:     uuid.New(),
-		Username: user.Username,
-		Password: string(hashedPassword),
-		Role:     domain.USER_ROLE,
+		return err
 	}
 
 	err = u.userRepo.Save(ctx, userEntity)
@@ -103,7 +98,7 @@ func (u *UserUsecase) Auth(ctx context.Context, user domain.User) (string, error
 	}
 
 	token, err := GenerateJWT(
-		shared.UserAuth{
+		auth.UserAuth{
 			UUID:     validUser.UUID,
 			Username: validUser.Username,
 			Role:     validUser.Role,
@@ -116,9 +111,9 @@ func (u *UserUsecase) Auth(ctx context.Context, user domain.User) (string, error
 	return token, nil
 }
 
-func GenerateJWT(user shared.UserAuth) (string, error) {
+func GenerateJWT(user auth.UserAuth) (string, error) {
 
-	claims := &shared.JWTClaim{
+	claims := &auth.JWTClaim{
 		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "localhost",

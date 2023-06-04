@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/domain/repository"
 
@@ -43,8 +44,8 @@ func (r *userRepository) FindByUUID(ctx context.Context, uuid string) (domain.Us
 
 	var user domain.User
 	result := r.db.Preload("Shorteners").Find(&user, "uuid = ?", uuid).Limit(1)
-	if result.Error != nil {
-		return domain.User{}, result.Error
+	if result.RowsAffected != 1 {
+		return domain.User{}, errors.New("no data")
 	}
 
 	return user, nil
@@ -54,8 +55,8 @@ func (r *userRepository) FindByUsername(ctx context.Context, username string) (d
 
 	var user domain.User
 	result := r.db.Preload("Shorteners").Find(&user, "username = ?", username).Limit(1)
-	if result.Error != nil {
-		return domain.User{}, result.Error
+	if result.RowsAffected != 1 {
+		return domain.User{}, errors.New("no data")
 	}
 
 	return user, nil

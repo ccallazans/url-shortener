@@ -5,6 +5,7 @@ import (
 	"errors"
 
 	"myapi/internal/app/application/usecase"
+	"myapi/internal/app/application/usecase/auth"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/shared"
 
@@ -26,7 +27,7 @@ func NewShortenerHandler(shortenerUsecase usecase.ShortenerUsecase) *ShortenerHa
 }
 
 func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
-	user, exists := c.MustGet("user").(*shared.UserAuth)
+	user, exists := c.MustGet("user").(*auth.UserAuth)
 	if !exists {
 		user.UUID = uuid.Nil
 	}
@@ -51,7 +52,7 @@ func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
 		return
 	}
 
-	shortener, err := h.shortenerUsecase.Save(context.TODO(), &domain.Shortener{Url: shortenerRequest.Url, User: user.UUID})
+	shortener, err := h.shortenerUsecase.Save(context.TODO(), domain.Shortener{Url: shortenerRequest.Url, User: user.UUID})
 	if err != nil {
 		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
@@ -68,7 +69,7 @@ func (h *ShortenerHandler) Redirect(c *gin.Context) {
 	url, err := h.shortenerUsecase.FindByHash(context.TODO(), hash)
 	if err != nil {
 		response := shared.HandleResponseError(err)
-		c.AbortWithStatusJSON(response.StatusCode, hash)
+		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
 

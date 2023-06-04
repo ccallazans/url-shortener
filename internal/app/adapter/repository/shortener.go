@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/domain/repository"
 
@@ -20,7 +21,7 @@ func NewShortenerRepository(db *gorm.DB) repository.IShortener {
 
 func (r *shortenerRepository) Save(ctx context.Context, shortener domain.Shortener) error {
 
-	result := r.db.Create(shortener)
+	result := r.db.Create(&shortener)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -43,8 +44,8 @@ func (r *shortenerRepository) FindByHash(ctx context.Context, hash string) (doma
 
 	var shortener domain.Shortener
 	result := r.db.Find(&shortener, "hash = ?", hash).Limit(1)
-	if result.Error != nil {
-		return domain.Shortener{}, result.Error
+	if result.RowsAffected != 1 {
+		return domain.Shortener{}, errors.New("no data")
 	}
 
 	return shortener, nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math/rand"
+	"myapi/internal/app/application/usecase/factory"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/domain/repository"
 	"myapi/internal/app/shared"
@@ -19,7 +20,7 @@ func NewShortenerUsecase(shortenerRepo repository.IShortener) ShortenerUsecase {
 	}
 }
 
-func (u *ShortenerUsecase) Save(ctx context.Context, shortener *domain.Shortener) (domain.Shortener, error) {
+func (u *ShortenerUsecase) Save(ctx context.Context, shortener domain.Shortener) (domain.Shortener, error) {
 
 	shortener.Hash = generateHash()
 
@@ -28,10 +29,9 @@ func (u *ShortenerUsecase) Save(ctx context.Context, shortener *domain.Shortener
 		return domain.Shortener{}, errors.New(shared.HASH_ALREADY_EXISTS)
 	}
 
-	shortenerEntity := domain.Shortener{
-		Url:  shortener.Url,
-		Hash: shortener.Hash,
-		User: shortener.User,
+	shortenerEntity, err := factory.NewShortenerFactory(shortener.Url, shortener.Hash, shortener.User)
+	if err != nil {
+		return domain.Shortener{}, err
 	}
 
 	err = u.shortenerRepo.Save(ctx, shortenerEntity)
