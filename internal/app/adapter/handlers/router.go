@@ -33,7 +33,7 @@ func RouterConfig(db *gorm.DB) *gin.Engine {
 
 		userRouter := v1Router.Group("/user", middleware.AuthenticationMiddleware())
 		userRouter.GET("/", userHandler.GetAllUsers)
-		userRouter.GET("/:uuid", userHandler.GetUser)
+		userRouter.GET("/:username", userHandler.GetUser)
 
 		authRouter := v1Router.Group("/auth")
 		authRouter.POST("/login", userHandler.AuthUser)

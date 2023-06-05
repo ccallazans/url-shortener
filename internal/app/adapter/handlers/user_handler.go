@@ -56,9 +56,9 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 }
 
 func (h *UserHandler) GetUser(c *gin.Context) {
-	uuid := c.Param("uuid")
+	username := c.Param("username")
 
-	user, err := h.userUsecase.FindByUUID(context.TODO(), uuid)
+	user, err := h.userUsecase.FindByUsername(context.TODO(), username)
 	if err != nil {
 		response := shared.HandleResponseError(err)
 		c.AbortWithStatusJSON(response.StatusCode, response)
