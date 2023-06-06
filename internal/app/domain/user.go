@@ -17,6 +17,8 @@ type UserResponse struct {
 	Shorteners []ShortenerResponse `json:"shorteners"`
 }
 
+//
+
 func (u *User) ToResponse() UserResponse {
 
 	var shortnersResponse []ShortenerResponse

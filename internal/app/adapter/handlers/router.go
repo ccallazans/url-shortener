@@ -29,15 +29,15 @@ func RouterConfig(db *gorm.DB) *gin.Engine {
 	v1Router := router.Group("/v1")
 	{
 		shortenerRouter := v1Router.Group("/shortener", middleware.AuthenticationMiddleware())
-		shortenerRouter.POST("/", shortenerHandler.CreateShortener)
+			shortenerRouter.POST("/", shortenerHandler.CreateShortener)
 
 		userRouter := v1Router.Group("/user", middleware.AuthenticationMiddleware())
-		userRouter.GET("/", userHandler.GetAllUsers)
-		userRouter.GET("/:username", userHandler.GetUser)
+			userRouter.GET("/", userHandler.GetAllUsers)
+			userRouter.GET("/:username", userHandler.GetUser)
 
 		authRouter := v1Router.Group("/auth")
-		authRouter.POST("/login", userHandler.AuthUser)
-		authRouter.POST("/register", userHandler.CreateUser)
+			authRouter.POST("/login", userHandler.AuthUser)
+			authRouter.POST("/register", userHandler.CreateUser)
 	}
 
 	return router

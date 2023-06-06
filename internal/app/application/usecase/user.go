@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 
-	"myapi/internal/app/application/usecase/auth"
 	"myapi/internal/app/application/usecase/factory"
 	"myapi/internal/app/domain"
 
@@ -98,7 +97,7 @@ func (u *UserUsecase) Auth(ctx context.Context, user domain.User) (string, error
 	}
 
 	token, err := GenerateJWT(
-		auth.UserAuth{
+		domain.UserAuth{
 			UUID:     validUser.UUID,
 			Username: validUser.Username,
 			Role:     validUser.Role,
@@ -111,9 +110,9 @@ func (u *UserUsecase) Auth(ctx context.Context, user domain.User) (string, error
 	return token, nil
 }
 
-func GenerateJWT(user auth.UserAuth) (string, error) {
+func GenerateJWT(user domain.UserAuth) (string, error) {
 
-	claims := &auth.JWTClaim{
+	claims := &domain.JWTClaim{
 		User: user,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "localhost",

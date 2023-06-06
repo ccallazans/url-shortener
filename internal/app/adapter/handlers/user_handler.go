@@ -2,14 +2,12 @@ package handlers
 
 import (
 	"context"
-	"errors"
 	"myapi/internal/app/application/usecase"
 	"myapi/internal/app/domain"
 	"myapi/internal/app/shared"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 )
 
 type UserHandler struct {
@@ -31,16 +29,9 @@ func (h *UserHandler) CreateUser(c *gin.Context) {
 
 	var userRequest UserRequest
 
-	err := c.ShouldBindJSON(&userRequest)
+	err := validateRequest(c, &userRequest)
 	if err != nil {
 		response := shared.HandleResponseError(err)
-		c.AbortWithStatusJSON(response.StatusCode, response)
-		return
-	}
-
-	err = validator.New().Struct(userRequest)
-	if err != nil {
-		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}
@@ -89,16 +80,9 @@ func (h *UserHandler) AuthUser(c *gin.Context) {
 
 	var userRequest UserRequest
 
-	err := c.ShouldBindJSON(&userRequest)
+	err := validateRequest(c, &userRequest)
 	if err != nil {
 		response := shared.HandleResponseError(err)
-		c.AbortWithStatusJSON(response.StatusCode, response)
-		return
-	}
-
-	err = validator.New().Struct(userRequest)
-	if err != nil {
-		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}

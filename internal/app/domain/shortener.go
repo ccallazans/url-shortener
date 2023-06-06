@@ -14,6 +14,8 @@ type ShortenerResponse struct {
 	Hash string `json:"hash"`
 }
 
+//
+
 func (s *Shortener) ToResponse() ShortenerResponse {
 	return ShortenerResponse{
 		Url:  s.Url,

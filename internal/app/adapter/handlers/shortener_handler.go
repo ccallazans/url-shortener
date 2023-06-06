@@ -2,17 +2,15 @@ package handlers
 
 import (
 	"context"
-	"errors"
 
 	"myapi/internal/app/application/usecase"
-	"myapi/internal/app/application/usecase/auth"
+
 	"myapi/internal/app/domain"
 	"myapi/internal/app/shared"
 
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -27,7 +25,7 @@ func NewShortenerHandler(shortenerUsecase usecase.ShortenerUsecase) *ShortenerHa
 }
 
 func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
-	user, exists := c.MustGet("user").(*auth.UserAuth)
+	user, exists := c.MustGet("user").(*domain.UserAuth)
 	if !exists {
 		user.UUID = uuid.Nil
 	}
@@ -38,16 +36,9 @@ func (h *ShortenerHandler) CreateShortener(c *gin.Context) {
 
 	var shortenerRequest ShortenerRequest
 
-	err := c.ShouldBindJSON(&shortenerRequest)
+	err := validateRequest(c, &shortenerRequest)
 	if err != nil {
 		response := shared.HandleResponseError(err)
-		c.AbortWithStatusJSON(response.StatusCode, response)
-		return
-	}
-
-	err = validator.New().Struct(shortenerRequest)
-	if err != nil {
-		response := shared.HandleResponseError(errors.New(shared.BAD_REQUEST))
 		c.AbortWithStatusJSON(response.StatusCode, response)
 		return
 	}

@@ -3,7 +3,7 @@ package middleware
 import (
 	"errors"
 
-	"myapi/internal/app/application/usecase/auth"
+	"myapi/internal/app/domain"
 	"myapi/internal/app/shared"
 
 	"os"
@@ -32,7 +32,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 		tokenString := authHeaderParts[1]
 
 		// validate the token
-		token, err := jwt.ParseWithClaims(tokenString, &auth.JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := jwt.ParseWithClaims(tokenString, &domain.JWTClaim{}, func(token *jwt.Token) (interface{}, error) {
 			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 				return nil, errors.New(shared.INVALID_SIGNING_METHOD)
 			}
@@ -43,7 +43,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 			c.AbortWithStatusJSON(response.StatusCode, response)
 			return
 		}
-		claims, ok := token.Claims.(*auth.JWTClaim)
+		claims, ok := token.Claims.(*domain.JWTClaim)
 		if !ok || !token.Valid {
 			response := shared.HandleResponseError(errors.New(shared.AUTHORIZATION_HEADER_FORMAT_ERROR))
 			c.AbortWithStatusJSON(response.StatusCode, response)
