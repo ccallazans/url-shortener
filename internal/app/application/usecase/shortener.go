@@ -28,6 +28,7 @@ func (u *ShortenerUsecase) Save(ctx context.Context, shortener domain.Shortener)
 	if err == nil {
 		return domain.Shortener{}, errors.New(shared.HASH_ALREADY_EXISTS)
 	}
+	comparable
 
 	shortenerEntity, err := factory.NewShortenerFactory(shortener.Url, shortener.Hash, shortener.User)
 	if err != nil {
